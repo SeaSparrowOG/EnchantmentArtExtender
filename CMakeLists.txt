@@ -69,11 +69,16 @@ install(TARGETS ${PROJECT_NAME}
 #===========================================================================
 if(DEFINED OUTPUT_FOLDER)
     set(DLL_FOLDER "${OUTPUT_FOLDER}/SKSE/Plugins")
+    set(CONFIG_FOLDER "${OUTPUT_FOLDER}/Enchantment Effects Extender")
+    set(PAPYRUS_SOURCE_FOLDER "${OUTPUT_FOLDER}/Source/Scripts")
+    set(PAPYRUS_SCRIPTS_FOLDER "${OUTPUT_FOLDER}/Scripts")
 
     add_custom_command(
         TARGET "${PROJECT_NAME}"
         POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${PROJECT_NAME}>" "${DLL_FOLDER}/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/exampleJSON/" "${CONFIG_FOLDER}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/Papyrus/Source/Scripts/" "${PAPYRUS_SOURCE_FOLDER}"
         VERBATIM
     )
 
