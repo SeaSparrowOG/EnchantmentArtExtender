@@ -1,44 +1,24 @@
 {
-    "minimumEnchanterVersion":1,
-    "EnchantmentKeywords":[
-        {
-        "Skyrim.esm":"0x1CEAD"
-        }
-    ],
-    "NewArts":[
-        {   
-        "Greatswords":[
-            {
-            "WeaponKeywords":[
-                {
-                    "Skyrim.esm":"0x6D931"
-                }
-            ]
-        },
-        {
-            "Left":"0x800"
-        },
-        {
-            "Right":"0x801"
-        }
+  "MinimumEnchanterVersion": 1,
+  "SpecialFlag": "Additive",
+  "EnchantmentKeywords": [
+    "MagicDamageFire",
+    "MagicDamageFrost"
+  ],
+  "SwapData": [
+    {
+      "CustomSwap1": {
+        "ArtSource": "VanillaEnchantmentExtension.esp",
+        "Left": "0x800",
+        "Right": "0x801",
+        "WeaponID": { "LegacyOfTheDragonborn.esm": "0x19d" },
+        "IgnoreKeywords": [
+          "WeaponTypePike"
+        ],
+        "WeaponKeywords": [
+          "WeaponTypeSword"
         ]
-        },
-        {
-        "Swords":[
-            {
-            "WeaponKeywords":[
-                {
-                    "Skyrim.esm":"0x1E711"
-                }
-            ]
-        },
-        {
-            "Left":"0x802"
-        },
-        {
-            "Right":"0x803"
-        }
-        ]
-        }
-    ]
+      }
+    }
+  ]
 }

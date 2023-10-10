@@ -1,0 +1,15 @@
+{
+  "MinimumEnchanterVersion": "Cool, what does this do?",
+  "SpecialFlag": "I didn't read the documentation!'",
+  "EnchantmentKeywords": [],
+  "SwapData": [
+    {
+      "CustomSwap1": {
+        "ArtSource": "MissingDependency.esp",
+        "WeaponID": { "ModWithoutExtension": "0x19d" },
+        "IgnoreKeywords": [],
+        "WeaponKeywords": []
+      }
+    }
+  ]
+}
