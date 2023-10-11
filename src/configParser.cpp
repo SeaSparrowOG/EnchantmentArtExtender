@@ -14,61 +14,72 @@ namespace ConfigParser {
 		std::vector<std::string> invalidArts;
 
 		void LogMessages() {
-			_logger::info("------------------------------------> Report - Errors <------------------------------------");
+			_logger::info("----------------------------------------> Errors <-----------------------------------------");
 
 			if (!caughtErrors.empty()) {
 				_logger::info("    Exceptions should not be ignored. if an exception is caught,");
 				_logger::info("    it is best to remove the config file it came from.");
+				_logger::info("");
 				_logger::info("    Exceptions:");
 				for (auto caughtError : caughtErrors) {
 					_logger::info("        {}", caughtError);
 				}
+				if (!caughtGarbage.empty()) _logger::info("    ========================================================================");
 				_logger::info("");
 			}
 
 			if (!caughtGarbage.empty()) {
 				_logger::info("    \"Garbage\" are considered any non-JSON files");
 				_logger::info("    in the config directory.");
+				_logger::info("");
 				_logger::info("    Garbage:");
 				for (auto garbage : caughtGarbage) {
 					_logger::info("        {}", garbage);
 				}
+				if (!incompatibleConfigs.empty()) _logger::info("    ========================================================================");
 				_logger::info("");
 			}
 
 			if (!incompatibleConfigs.empty()) {
 				_logger::info("    Incompatible configs are configs that expect");
 				_logger::info("    a newer version of Enchantment Art Extender than is installed.");
+				_logger::info("");
 				_logger::info("    Affected Configs:");
 				for (auto invalidMessage : incompatibleConfigs) {
 					_logger::info("        {}", invalidMessage);
 				}
+				if (!invalidConfigs.empty()) _logger::info("    ========================================================================");
 				_logger::info("");
 			}
 
 			if (!invalidConfigs.empty()) {
-				_logger::info("    Invalid configs will be ignored");
+				_logger::info("    Invalid configs will be ignored.");
 				_logger::info("    You should report this to the mod author.");
+				_logger::info("");
 				_logger::info("    Affected Configs:");
 				for (auto invalidMessage : invalidConfigs) {
 					_logger::info("        {}", invalidMessage);
 				}
+				if (!missingMasters.empty()) _logger::info("    ========================================================================");
 				_logger::info("");
 			}
 
 			if (!missingMasters.empty()) {
 				_logger::info("    Missing masters are user-error. It means that a conflict");
 				_logger::info("    expects a certain mod to be loaded, but it is missing.");
+				_logger::info("");
 				_logger::info("    Affected Configs:");
 				for (auto invalidMessage : missingMasters) {
 					_logger::info("        {}", invalidMessage);
 				}
+				if (!invalidArts.empty()) _logger::info("    ========================================================================");
 				_logger::info("");
 			}
 
 			if (!invalidArts.empty()) {
 				_logger::info("    Invalid arts are mod-author error. It means that the FormID provided");
 				_logger::info("    for the art either does not exist, or does not point to a valid ability.");
+				_logger::info("");
 				_logger::info("    Affected Configs:");
 				for (auto invalidMessage : invalidArts) {
 					_logger::info("        {}", invalidMessage);
@@ -78,7 +89,9 @@ namespace ConfigParser {
 
 			_logger::info("You should try to resolve these errors");
 			_logger::info("However, this does not mean that your game will be broken if you don't.");
-			_logger::info("------------------------------------>   Report - End   <------------------------------------");
+			_logger::info("------------------------------------>   Errors - End   <------------------------------------");
+			_logger::info("");
+			_logger::info("");
 		}
 
 		//This could very well just be the default constructor
@@ -269,6 +282,8 @@ namespace ConfigParser {
 
 	//Called externally, parses all valid configs.
 	void ParseConfigs() {
+		_logger::info("------------------------------------->    Report   <--------------------------------------");
+		_logger::info("Begining reading config files.");
 		const std::filesystem::path configDirectory{ R"(.\Data\Enchantment Effects Extender)" };
 
 		if (!std::filesystem::exists(configDirectory)) {
@@ -278,8 +293,7 @@ namespace ConfigParser {
 
 		ParseConfigsErrors errorHolder = ParseConfigsErrors();
 		std::vector<std::string> validConfigs = std::vector<std::string>();
-
-		_logger::info("--------------------------------->Setup - Reading Configs<---------------------------------");
+		int configCount = 0;
 
 		try {
 			for (const auto& file : std::filesystem::directory_iterator(configDirectory)) {
@@ -288,10 +302,11 @@ namespace ConfigParser {
 					continue;
 				}
 
+				++configCount;
+
 				if (!IsConfigValid(file, &errorHolder)) {
 					continue;
 				}
-				
 				std::ifstream rawJSON(file.path().string());
 				Json::Reader  JSONReader;
 				Json::Value   JSONFile;
@@ -306,18 +321,17 @@ namespace ConfigParser {
 			_logger::error("Assuming broken application state. Configs will not be parsed, and no arts will be distributed.");
 			return;
 		}
-
-		_logger::info("------------------------------>Setup - Done Reading Configs<-------------------------------");
-		_logger::info("");
-		_logger::info("------------------------------------->Setup - Report<--------------------------------------");
-		_logger::info("Number of valid configs: {}.", validConfigs.size());
+		_logger::info("Finished reading config files.");
+		_logger::info("Read {} potential files.", configCount);
+		_logger::info("Found {} valid files:", validConfigs.size());
 		for (auto success : validConfigs) {
 			_logger::info("    >{}", success);
 		}
 		auto swaps = SingletonHolder::ConditionHolder::GetSingleton()->GetSwaps();
 		_logger::info("Number of patches applied: {}.", swaps->size());
 		_logger::info("");
-		_logger::info("--------------------------------->Setup - End of Report<-----------------------------------");
+		_logger::info("--------------------------------->    End of Report    <-----------------------------------");
+		_logger::info("");
 		_logger::info("");
 		if (errorHolder.errorsExist) {
 			errorHolder.LogMessages();
