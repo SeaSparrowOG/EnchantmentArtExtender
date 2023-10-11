@@ -1,5 +1,5 @@
 {
-  "MinimumEnchanterVersion": "Cool, what does this do?",
+  "MinimumEnchanterVersion": 1,
   "SpecialFlag": "I didn't read the documentation!'",
   "EnchantmentKeywords": [],
   "SwapData": [

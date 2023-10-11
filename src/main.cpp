@@ -17,7 +17,7 @@ void SetupLog() {
     spdlog::flush_on(spdlog::level::info);
 
     //Pattern
-    spdlog::set_pattern("[%l]: %v");
+    spdlog::set_pattern("%v");
 }
 
 void MessageHandler(SKSE::MessagingInterface::Message* a_message)

@@ -25,7 +25,9 @@ namespace SingletonHolder {
 		std::vector<ArtSwap>    ArtSwaps;
 		static ConditionHolder  Instance;
 
-		ConditionHolder() {}
+		ConditionHolder() {
+			this->iVerCode = 1;
+		}
 	};
 	ConditionHolder ConditionHolder::Instance;
 }

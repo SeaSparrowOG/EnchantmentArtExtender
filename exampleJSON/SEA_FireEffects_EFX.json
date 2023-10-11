@@ -5,10 +5,10 @@
     "MagicDamageFire",
     "MagicDamageFrost"
   ],
+  "ArtSource": "VanillaEnchantmentExtension.esp",
   "SwapData": [
     {
       "CustomSwap1": {
-        "ArtSource": "VanillaEnchantmentExtension.esp",
         "Left": "0x800",
         "Right": "0x801",
         "WeaponID": { "LegacyOfTheDragonborn.esm": "0x19d" },
