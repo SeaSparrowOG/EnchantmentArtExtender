@@ -3,7 +3,7 @@
 namespace SingletonHolder {
 	class ConditionHolder {
 	public:
-		std::vector<ArtSwap*>*  GetSwaps() {
+		std::vector<ArtSwap>*  GetSwaps() {
 			return &ArtSwaps;
 		}
 
@@ -15,14 +15,14 @@ namespace SingletonHolder {
 			return iVerCode;
 		}
 
-		void                    CreateSwap(ArtSwap* a_artSwap) {
+		void                    CreateSwap(ArtSwap a_artSwap) {
 			this->ArtSwaps.push_back(a_artSwap);
 		}
 
 		ConditionHolder(const ConditionHolder& obj) = delete;
 	private:
 		int                     iVerCode;
-		std::vector<ArtSwap*>   ArtSwaps;
+		std::vector<ArtSwap>    ArtSwaps;
 		static ConditionHolder  Instance;
 
 		ConditionHolder() {}

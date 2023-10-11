@@ -24,9 +24,6 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 {
     switch (a_message->type) {
     case SKSE::MessagingInterface::kDataLoaded: {
-        
-        _logger::info("passed");
-        _logger::info("Passed Again.");
         ConfigParser::ParseConfigs();
         break;
     }

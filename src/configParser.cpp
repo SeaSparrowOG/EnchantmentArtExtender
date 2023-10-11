@@ -1,5 +1,5 @@
 #include "configParser.h"
-#include <singletonHolder.h>
+#include "singletonHolder.h"
 
 namespace ConfigParser {
 
@@ -159,13 +159,18 @@ namespace ConfigParser {
 
 	//Returns true if the settings were successfully applied.
 	bool ApplySettings(Json::Value a_JSON, ParseConfigsErrors* a_errorHolder) {
-
+		try {
+			const auto ConfigHolder = SingletonHolder::ConditionHolder::GetSingleton();
+		} catch (std::exception e) {
+			_logger::error("Could not instantiate the Config Holder due to <{}> error. Reading is aborted", e.what());
+			return false;
+		}
 		return true;
 	}
 
 	//Called externally, parses all valid configs.
 	void ParseConfigs() {
-		const std::filesystem::path configDirectory{ R"(.\Enchantment Effects Extender)" };
+		const std::filesystem::path configDirectory{ R"(.\Data\Enchantment Effects Extender)" };
 
 		if (!std::filesystem::exists(configDirectory)) {
 			_logger::info("No config directory found in the Data folder.");
@@ -210,7 +215,8 @@ namespace ConfigParser {
 		for (auto success : validConfigs) {
 			_logger::info("    >{}", success);
 		}
-		_logger::info("Number of patches applied: {}.", SingletonHolder::ConditionHolder::GetSingleton()->GetSwaps()->size());
+		auto swaps = SingletonHolder::ConditionHolder::GetSingleton()->GetSwaps();
+		_logger::info("Number of patches applied: {}.", swaps->size());
 		_logger::info("");
 		_logger::info("-------->Setup - End of Report<-----------");
 		_logger::info("");
