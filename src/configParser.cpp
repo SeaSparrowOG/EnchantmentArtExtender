@@ -14,10 +14,11 @@ namespace ConfigParser {
 		std::vector<std::string> invalidArts;
 
 		void LogMessages() {
-			_logger::info("--------> Report - Errors <--------");
+			_logger::info("------------------------------------> Report - Errors <------------------------------------");
 
 			if (!caughtErrors.empty()) {
-				_logger::info("    Exceptions should not be ignored. if an exception is caught, it is best to remove the config file it came from.");
+				_logger::info("    Exceptions should not be ignored. if an exception is caught,");
+				_logger::info("    it is best to remove the config file it came from.");
 				_logger::info("    Exceptions:");
 				for (auto caughtError : caughtErrors) {
 					_logger::info("        {}", caughtError);
@@ -26,7 +27,8 @@ namespace ConfigParser {
 			}
 
 			if (!caughtGarbage.empty()) {
-				_logger::info("    \"Garbage\" are considered any non-JSON files in the config directory.");
+				_logger::info("    \"Garbage\" are considered any non-JSON files");
+				_logger::info("    in the config directory.");
 				_logger::info("    Garbage:");
 				for (auto garbage : caughtGarbage) {
 					_logger::info("        {}", garbage);
@@ -35,7 +37,8 @@ namespace ConfigParser {
 			}
 
 			if (!incompatibleConfigs.empty()) {
-				_logger::info("    Incompatible configs are configs that expect a newer version of Enchantment Art Extender than is installed.");
+				_logger::info("    Incompatible configs are configs that expect");
+				_logger::info("    a newer version of Enchantment Art Extender than is installed.");
 				_logger::info("    Affected Configs:");
 				for (auto invalidMessage : incompatibleConfigs) {
 					_logger::info("        {}", invalidMessage);
@@ -44,7 +47,8 @@ namespace ConfigParser {
 			}
 
 			if (!invalidConfigs.empty()) {
-				_logger::info("    Invalid configs will be ignored. You should report this to the mod author.");
+				_logger::info("    Invalid configs will be ignored");
+				_logger::info("    You should report this to the mod author.");
 				_logger::info("    Affected Configs:");
 				for (auto invalidMessage : invalidConfigs) {
 					_logger::info("        {}", invalidMessage);
@@ -53,7 +57,8 @@ namespace ConfigParser {
 			}
 
 			if (!missingMasters.empty()) {
-				_logger::info("    Missing masters are user-error. It means that a conflict expects a certain mod to be loaded, but it is missing.");
+				_logger::info("    Missing masters are user-error. It means that a conflict");
+				_logger::info("    expects a certain mod to be loaded, but it is missing.");
 				_logger::info("    Affected Configs:");
 				for (auto invalidMessage : missingMasters) {
 					_logger::info("        {}", invalidMessage);
@@ -62,7 +67,8 @@ namespace ConfigParser {
 			}
 
 			if (!invalidArts.empty()) {
-				_logger::info("    Invalid arts are mod-author error. It means that the FormID provided for the art either does not exist, or does not point to a valid ability.");
+				_logger::info("    Invalid arts are mod-author error. It means that the FormID provided");
+				_logger::info("    for the art either does not exist, or does not point to a valid ability.");
 				_logger::info("    Affected Configs:");
 				for (auto invalidMessage : invalidArts) {
 					_logger::info("        {}", invalidMessage);
@@ -70,8 +76,9 @@ namespace ConfigParser {
 				_logger::info("");
 			}
 
-			_logger::info("You should try to resolve these errors. However, this does not mean that your game will be broken if you don't.");
-			_logger::info("-------->   Report - End   <--------");
+			_logger::info("You should try to resolve these errors");
+			_logger::info("However, this does not mean that your game will be broken if you don't.");
+			_logger::info("------------------------------------>   Report - End   <------------------------------------");
 		}
 
 		//This could very well just be the default constructor
@@ -218,7 +225,7 @@ namespace ConfigParser {
 
 		if (enchantmentKeywords.empty()) {
 			AddErrorToLog(a_errorHolder, 3, ">" + a_path.filename().string());
-			AddErrorToLog(a_errorHolder, 3, "    This config requires at least version " + minVersion);
+			AddErrorToLog(a_errorHolder, 3, "    No keywords found in the EnchantmentKeywords field.");
 			return false;
 		}
 
@@ -272,7 +279,7 @@ namespace ConfigParser {
 		ParseConfigsErrors errorHolder = ParseConfigsErrors();
 		std::vector<std::string> validConfigs = std::vector<std::string>();
 
-		_logger::info("-------->Setup - Reading Configs<---------");
+		_logger::info("--------------------------------->Setup - Reading Configs<---------------------------------");
 
 		try {
 			for (const auto& file : std::filesystem::directory_iterator(configDirectory)) {
@@ -300,9 +307,9 @@ namespace ConfigParser {
 			return;
 		}
 
-		_logger::info("----->Setup - Done Reading Configs<-------");
+		_logger::info("------------------------------>Setup - Done Reading Configs<-------------------------------");
 		_logger::info("");
-		_logger::info("------------>Setup - Report<--------------");
+		_logger::info("------------------------------------->Setup - Report<--------------------------------------");
 		_logger::info("Number of valid configs: {}.", validConfigs.size());
 		for (auto success : validConfigs) {
 			_logger::info("    >{}", success);
@@ -310,7 +317,7 @@ namespace ConfigParser {
 		auto swaps = SingletonHolder::ConditionHolder::GetSingleton()->GetSwaps();
 		_logger::info("Number of patches applied: {}.", swaps->size());
 		_logger::info("");
-		_logger::info("-------->Setup - End of Report<-----------");
+		_logger::info("--------------------------------->Setup - End of Report<-----------------------------------");
 		_logger::info("");
 		if (errorHolder.errorsExist) {
 			errorHolder.LogMessages();
