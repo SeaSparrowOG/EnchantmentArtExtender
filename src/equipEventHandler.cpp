@@ -2,6 +2,27 @@
 
 namespace EquipEventHandler {
 
+	void driver(RE::TESObjectWEAP* a_wpn, RE::Actor* a_actor) {
+		//Only right hand, only fire.
+		RE::BSTArray<RE::Effect*> empty;
+		RE::EnchantmentItem* wpnEnchant = a_wpn->formEnchanting ? a_wpn->formEnchanting : nullptr;
+		auto magicEffect = wpnEnchant ? wpnEnchant->effects : empty;
+
+		for (auto effect : magicEffect) {
+			if (effect->baseEffect->ContainsKeywordString("MagicDamageFire"sv)) {
+				RE::FormID fireFXID;
+				std::istringstream("0x800") >> std::hex >> fireFXID;
+				RE::FormID frostFXID;
+				std::istringstream("0x801") >> std::hex >> frostFXID;
+				RE::SpellItem* fireFX = RE::TESDataHandler::GetSingleton()->LookupForm(fireFXID, "driver.esp")->As<RE::SpellItem>();
+				RE::SpellItem* frostFX = RE::TESDataHandler::GetSingleton()->LookupForm(frostFXID, "driver.esp")->As<RE::SpellItem>();
+				a_actor->AddSpell(fireFX);
+				a_actor->AddSpell(frostFX);
+				return;
+			}
+		}
+	}
+
 	EquipEvent* EquipEvent::GetSingleton() {
 		static EquipEvent event;
 		return &event;
@@ -30,9 +51,10 @@ namespace EquipEventHandler {
 		const auto baseObject = a_event->baseObject;
 		const auto baseForm = a_event ? RE::TESObject::LookupByID(baseObject) : nullptr;
 		const auto baseWeapon = baseForm ? baseForm->As<RE::TESObjectWEAP>() : nullptr;
+		if (!baseWeapon) return response;
 
 		if (a_event->equipped) {
-
+			driver(baseWeapon, actor);
 		}
 		else {
 
