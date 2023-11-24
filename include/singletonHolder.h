@@ -8,7 +8,8 @@ namespace SingletonHolder {
 		}
 
 		static ConditionHolder* GetSingleton() {
-			return &Instance;
+			static ConditionHolder singleton;
+			return &singleton;
 		}
 
 		int                     GetVersion() {
@@ -23,11 +24,9 @@ namespace SingletonHolder {
 	private:
 		int                     iVerCode;
 		std::vector<ArtSwap>    ArtSwaps;
-		static ConditionHolder  Instance;
 
 		ConditionHolder() {
 			this->iVerCode = 1;
 		}
 	};
-	ConditionHolder ConditionHolder::Instance;
 }

@@ -168,7 +168,73 @@ namespace ConfigParser {
 
 	//Returns a FormID from a given string. Logs an error if the string cannot be parsed, and throws an exception.
 	RE::FormID GetFormIDFromString(std::string a_string) {
-		return NULL;
+		RE::FormID result;
+		std::istringstream ss{ a_string };
+		ss >> std::hex >> result;
+		return result;
+	}
+
+	RE::SpellItem* GetSpellFromFormID(RE::FormID a_FormID, std::string a_ModName) {
+		RE::SpellItem* response;
+		RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(a_FormID, a_ModName);
+		response = form ? form->As<RE::SpellItem>() : NULL;
+		return response;
+	}
+
+	RE::SpellItem* ResolveHandSwapData(std::string a_FormID, std::string a_artSource) {
+		RE::SpellItem* response = NULL;
+		response = GetSpellFromFormID(GetFormIDFromString(a_FormID), a_artSource);
+		return response;
+	}
+
+	bool IsSwapLegal(Json::Value a_Data, std::string a_ArtSource) {
+
+		Json::Value left = a_Data["Left"];
+		Json::Value right = a_Data["Right"];
+
+		if (!(left && right)) {
+
+			return false;
+		}
+
+		if (left) {
+			std::string contents = left.asString();
+			RE::FormID result;
+			result = GetFormIDFromString(contents);
+
+			if (!result) return false;
+			RE::SpellItem* art = GetSpellFromFormID(result, a_ArtSource);
+			if (!art) return false;
+		}
+
+		if (right) {
+			std::string contents = right.asString();
+			RE::FormID result;
+			result = GetFormIDFromString(contents);
+
+			if (!result) return false;
+			RE::SpellItem* art = GetSpellFromFormID(result, a_ArtSource);
+			if (!art) return false;
+		}
+
+		Json::Value weaponID = a_Data["WeaponID"];
+		Json::Value keywordID = a_Data["WeaponKeywords"];
+
+		//Neither present, one should.
+		if (!(weaponID && keywordID)) return false;
+
+		//Both present when they shouldn't.
+		if (weaponID && keywordID) return false;
+
+		if (weaponID) {
+			Json::Value::Members weaponIDs = weaponID.getMemberNames();
+			for (auto weaponID : weaponIDs) {
+				if (!IsModPresent(weaponID)) return false;
+				RE::FormID foundID = GetFormIDFromString(weaponID);
+				if (!foundID) return false;
+			}
+		}
+		return true;
 	}
 
 	//Returns if the config is valid (all mods present and version code correct).
@@ -271,12 +337,39 @@ namespace ConfigParser {
 
 	//Returns true if the settings were successfully applied.
 	bool ApplySettings(Json::Value a_JSON, ParseConfigsErrors* a_errorHolder) {
+
+		const SingletonHolder::ConditionHolder* ConfigHolder;
 		try {
-			const auto ConfigHolder = SingletonHolder::ConditionHolder::GetSingleton();
+			ConfigHolder = SingletonHolder::ConditionHolder::GetSingleton();
 		} catch (std::exception e) {
 			_logger::error("<{}> error occured.", e.what());
 			return false;
 		}
+
+		Json::Value swaps = a_JSON["SwapData"];
+		std::string artSource = a_JSON["ArtSource"].asString();
+		std::vector<std::string> enchantmentKeywords;
+
+		for (auto requiredKeyword : a_JSON["EnchantmentKeywords"]) {
+			enchantmentKeywords.push_back(requiredKeyword.asString());
+		}
+
+		for (auto swap : swaps) {
+			for (auto swapData : swap) {
+				RE::SpellItem* leftSwap = ResolveHandSwapData(swapData["Left"].asString(), artSource);
+				RE::SpellItem* rightSwap = ResolveHandSwapData(swapData["Right"].asString(), artSource);
+				std::vector<std::string> weaponKeywords;
+
+				for (auto requiredKeyword : swapData["WeaponKeywords"]) {
+					weaponKeywords.push_back(requiredKeyword.asString());
+				}
+
+				ArtSwap newItem = ArtSwap(weaponKeywords, enchantmentKeywords, leftSwap, rightSwap);
+
+				SingletonHolder::ConditionHolder::GetSingleton()->CreateSwap(newItem);
+			}
+		}
+
 		return true;
 	}
 
@@ -338,5 +431,4 @@ namespace ConfigParser {
 		}
 		_logger::info("Enjoy your game!");
 	}
-
 }

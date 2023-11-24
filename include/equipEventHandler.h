@@ -1,4 +1,5 @@
 #pragma once
+#include "singletonHolder.h"
 
 namespace EquipEventHandler {
 

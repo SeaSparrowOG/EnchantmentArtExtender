@@ -14,14 +14,14 @@ using namespace std::literals;
 
 //Some code readability. Each Art Swap is a struct, and they are kept in a vector (in singletonHolder).
 struct ArtSwap {
-	std::vector<RE::BGSKeyword*> weaponKeywords;
-	std::vector<RE::BGSKeyword*> enchantmentKeywords;
-	RE::BGSArtObject* leftHandArtObject;
-	RE::BGSArtObject* rightHandArtObject;
+	std::vector<std::string> weaponKeywords;
+	std::vector<std::string> enchantmentKeywords;
+	RE::SpellItem* leftHandArtObject;
+	RE::SpellItem* rightHandArtObject;
 
 	//The constructor is EXPLICIT. If any part is missing, it should not work, anyways.
-	ArtSwap(std::vector<RE::BGSKeyword*> a_weaponKeywords, std::vector<RE::BGSKeyword*> a_enchantmentKeywords,
-		RE::BGSArtObject* a_leftHandArtObject, RE::BGSArtObject* a_rightHandArtObject) {
+	ArtSwap(std::vector<std::string> a_weaponKeywords, std::vector<std::string> a_enchantmentKeywords,
+		RE::SpellItem* a_leftHandArtObject, RE::SpellItem* a_rightHandArtObject) {
 
 		this->weaponKeywords = a_weaponKeywords;
 		this->enchantmentKeywords = a_enchantmentKeywords;
