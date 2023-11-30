@@ -12,34 +12,20 @@ using namespace std::literals;
 
 #define  _logger SKSE::log
 
-//Some code readability. Each Art Swap is a struct, and they are kept in a vector (in singletonHolder).
-struct ArtSwap {
-	std::vector<std::string> weaponKeywords;
-	std::vector<std::string> enchantmentKeywords;
-	RE::SpellItem* leftHandArtObject;
-	RE::SpellItem* rightHandArtObject;
+//Slight readability tweak.
+enum class ArtSwapMode {
+	Additive = 0,    //Layered on top of other additive swaps.
+	Exclusive = 1,   //Is applied and does not allow other swaps to be placed over it.
+	LowPriority = 2  //Is applied only if no other swaps would be applied.
+};
 
-	//The constructor is EXPLICIT. If any part is missing, it should not work, anyways.
-	ArtSwap(std::vector<std::string> a_weaponKeywords, std::vector<std::string> a_enchantmentKeywords,
-		RE::SpellItem* a_leftHandArtObject, RE::SpellItem* a_rightHandArtObject) {
-
-		this->weaponKeywords = a_weaponKeywords;
-		this->enchantmentKeywords = a_enchantmentKeywords;
-		this->leftHandArtObject = a_leftHandArtObject;
-		this->rightHandArtObject = a_rightHandArtObject;
-	}
-
-	void to_String() {
-		_logger::info("===================================");
-		_logger::info("           Art Swap");
-		_logger::info("===================================");
-		_logger::info("");
-		
-		_logger::info("");
-		_logger::info("===================================");
-		_logger::info("        End Of Art Swap");
-		_logger::info("===================================");
-	}
+enum class ActorCacheAction {
+	AddToCache = 0,
+	RemoveAbilityLeft = 1,
+	RemoveAbilityRight = 2,
+	AddAbilityLeft = 3,
+	AddAbilityRight = 4,
+	ClearFromCache = 5
 };
 
 //Used to bind Papyrus Functions.

@@ -29,7 +29,6 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
         EquipEventHandler::EquipEvent::GetSingleton()->RegisterListener();
         break;
     }
-
     default:
         break;
     }
@@ -37,11 +36,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     SetupLog();
-
     SKSE::Init(skse);
-    
     auto messaging = SKSE::GetMessagingInterface();
     messaging->RegisterListener(MessageHandler);
-
     return true;
 }

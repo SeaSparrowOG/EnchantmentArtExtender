@@ -25,11 +25,15 @@ find_package(jsoncpp CONFIG REQUIRED)
 find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")
 
 set(headers
+        include/helperFunctions.h
+        include/artSwap.h
         include/configParser.h
         include/equipEventHandler.h
         include/singletonHolder.h) 
 
 set(sources
+        src/helperFunctions.cpp
+        src/artSwap.cpp
 		src/configParser.cpp
         src/equipEventHandler.cpp
         src/main.cpp)

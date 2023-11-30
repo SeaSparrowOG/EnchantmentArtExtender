@@ -1,0 +1,65 @@
+{
+  "minimumEnchanterVersion": 1,
+  "SpecialFlag": "Exclusive",
+
+  "EnchantmentKeywords": [
+    "MagicDamageShock"
+  ],
+  "ArtSource": "testerPlugin.esp",
+  "SwapData": [
+    {
+      "SwordShockSwap": {
+        "Left": "0x81C",
+        "Right": "0x81D",
+        "WeaponKeywords": [
+          "WeapTypeSword"
+        ]
+      }
+    },
+    {
+      "AxeShockSwap": {
+        "Left": "0x81E",
+        "Right": "0x81F",
+        "WeaponKeywords": [
+          "WeapTypeAxe"
+        ]
+      }
+    },
+    {
+      "MaceShockSwap": {
+        "Left": "0x820",
+        "Right": "0x821",
+        "WeaponKeywords": [
+          "WeapTypeMace"
+        ]
+      }
+    },
+    {
+      "GreatswordShockSwap": {
+        "Left": "0x822",
+        "Right": "0x823",
+        "WeaponKeywords": [
+          "WeapTypeGreatsword"
+        ]
+      }
+    },
+    {
+      "WarAxeShockSwap": {
+        "Left": "0x824",
+        "Right": "0x825",
+        "WeaponKeywords": [
+          "WeapTypeWarAxe"
+        ]
+      }
+    },
+    {
+      "WarhammerShockSwap": {
+        "Left": "0x826",
+        "Right": "0x827",
+        "WeaponKeywords": [
+          "WeapTypeWarhammer"
+        ]
+      }
+    }
+  ]
+}

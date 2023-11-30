@@ -1,0 +1,65 @@
+{
+  "minimumEnchanterVersion": 1,
+  "SpecialFlag": "Exclusive",
+
+  "EnchantmentKeywords": [
+    "MagicDamageFire"
+  ],
+  "ArtSource": "testerPlugin.esp",
+  "SwapData": [
+    {
+      "SwordFireSwap": {
+        "Left": "0x804",
+        "Right": "0x805",
+        "WeaponKeywords": [
+          "WeapTypeSword"
+        ]
+      }
+    },
+    {
+      "AxeFireSwap": {
+        "Left": "0x806",
+        "Right": "0x807",
+        "WeaponKeywords": [
+          "WeapTypeAxe"
+        ]
+      }
+    },
+    {
+      "MaceFireSwap": {
+        "Left": "0x808",
+        "Right": "0x809",
+        "WeaponKeywords": [
+          "WeapTypeMace"
+        ]
+      }
+    },
+    {
+      "GreatswordFireSwap": {
+        "Left": "0x80A",
+        "Right": "0x80B",
+        "WeaponKeywords": [
+          "WeapTypeGreatsword"
+        ]
+      }
+    },
+    {
+      "WarAxeFireSwap": {
+        "Left": "0x80C",
+        "Right": "0x80D",
+        "WeaponKeywords": [
+          "WeapTypeWarAxe"
+        ]
+      }
+    },
+    {
+      "WarhammerFireSwap": {
+        "Left": "0x80E",
+        "Right": "0x80F",
+        "WeaponKeywords": [
+          "WeapTypeWarhammer"
+        ]
+      }
+    }
+  ]
+}

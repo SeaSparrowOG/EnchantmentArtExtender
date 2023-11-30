@@ -1,376 +1,427 @@
-#include "configParser.h"
 #include "singletonHolder.h"
+#include "configParser.h"
+#include "helperFunctions.h"
+#include "artSwap.h"
 
 namespace ConfigParser {
 
-	//Used to hold the errors caught while parsing conflicts.
-	struct ParseConfigsErrors {
-		bool                     errorsExist;
-		std::vector<std::string> caughtErrors;
-		std::vector<std::string> caughtGarbage;
-		std::vector<std::string> incompatibleConfigs;
-		std::vector<std::string> invalidConfigs;
-		std::vector<std::string> missingMasters;
-		std::vector<std::string> invalidArts;
+	enum ConfigErrorFields {
+		Empty,
+		NeedsUpdate,
+		UnexpectedFormat,
+		Garbage,
+		ArtErrors,
+		MissingMasters,
+		MissingWeapons
+	};
+	
+	struct ConfigError {
+		bool                     isCorrupted = false;      //I use a directory iterator, which throws this error.
+		bool                     isEmpty = false;
+		bool                     requiresUpdate = false;   //Config files may specify a minimum version.
+		std::string              configName;       //Specified when the file is read
+		std::string              unexpectedFormat; //Field contains bad value, such as object when we want string etc. 
+		std::vector<std::string> garbage;          //Unexpected fields, or defining fields when you don't need to.
+		std::vector<std::string> artErrors;        //Spell art is either missing, or (in the future) it won't show in game.
+		std::vector<std::string> missingMasters;   //Required field specifies a mod that is not present in the load order.
+		std::vector<std::string> missingWeapons;   //Required field specifies a weapon that does not exist.
 
-		void LogMessages() {
-			_logger::info("----------------------------------------> Errors <-----------------------------------------");
-
-			if (!caughtErrors.empty()) {
-				_logger::info("    Exceptions should not be ignored. if an exception is caught,");
-				_logger::info("    it is best to remove the config file it came from.");
-				_logger::info("");
-				_logger::info("    Exceptions:");
-				for (auto caughtError : caughtErrors) {
-					_logger::info("        {}", caughtError);
-				}
-				if (!caughtGarbage.empty()) _logger::info("    ========================================================================");
-				_logger::info("");
-			}
-
-			if (!caughtGarbage.empty()) {
-				_logger::info("    \"Garbage\" are considered any non-JSON files");
-				_logger::info("    in the config directory.");
-				_logger::info("");
-				_logger::info("    Garbage:");
-				for (auto garbage : caughtGarbage) {
-					_logger::info("        {}", garbage);
-				}
-				if (!incompatibleConfigs.empty()) _logger::info("    ========================================================================");
-				_logger::info("");
-			}
-
-			if (!incompatibleConfigs.empty()) {
-				_logger::info("    Incompatible configs are configs that expect");
-				_logger::info("    a newer version of Enchantment Art Extender than is installed.");
-				_logger::info("");
-				_logger::info("    Affected Configs:");
-				for (auto invalidMessage : incompatibleConfigs) {
-					_logger::info("        {}", invalidMessage);
-				}
-				if (!invalidConfigs.empty()) _logger::info("    ========================================================================");
-				_logger::info("");
-			}
-
-			if (!invalidConfigs.empty()) {
-				_logger::info("    Invalid configs will be ignored.");
-				_logger::info("    You should report this to the mod author.");
-				_logger::info("");
-				_logger::info("    Affected Configs:");
-				for (auto invalidMessage : invalidConfigs) {
-					_logger::info("        {}", invalidMessage);
-				}
-				if (!missingMasters.empty()) _logger::info("    ========================================================================");
-				_logger::info("");
-			}
-
-			if (!missingMasters.empty()) {
-				_logger::info("    Missing masters are user-error. It means that a conflict");
-				_logger::info("    expects a certain mod to be loaded, but it is missing.");
-				_logger::info("");
-				_logger::info("    Affected Configs:");
-				for (auto invalidMessage : missingMasters) {
-					_logger::info("        {}", invalidMessage);
-				}
-				if (!invalidArts.empty()) _logger::info("    ========================================================================");
-				_logger::info("");
-			}
-
-			if (!invalidArts.empty()) {
-				_logger::info("    Invalid arts are mod-author error. It means that the FormID provided");
-				_logger::info("    for the art either does not exist, or does not point to a valid ability.");
-				_logger::info("");
-				_logger::info("    Affected Configs:");
-				for (auto invalidMessage : invalidArts) {
-					_logger::info("        {}", invalidMessage);
-				}
-				_logger::info("");
-			}
-
-			_logger::info("You should try to resolve these errors");
-			_logger::info("However, this does not mean that your game will be broken if you don't.");
-			_logger::info("------------------------------------>   Errors - End   <------------------------------------");
-			_logger::info("");
-			_logger::info("");
+		ConfigError() {
+			this->isCorrupted = false;
+			this->isEmpty = false;
+			this->requiresUpdate = false;
+			this->configName = "";
+			this->unexpectedFormat = "";
+			this->garbage = std::vector<std::string>();
+			this->artErrors = std::vector<std::string>();
+			this->missingMasters = std::vector<std::string>();
+			this->missingWeapons = std::vector<std::string>();
 		}
 
-		//This could very well just be the default constructor
-		ParseConfigsErrors() {
-			this->errorsExist =         false;
-			this->caughtErrors =        std::vector<std::string>();
-			this->caughtGarbage =       std::vector<std::string>();
-			this->incompatibleConfigs = std::vector<std::string>();
-			this->invalidConfigs =      std::vector<std::string>();
-			this->missingMasters =      std::vector<std::string>();
-			this->invalidArts =         std::vector<std::string>();
+		//Prints the error log in the log file. Formats the string slightly (indentation, word wrap in the future).
+		void LogErrors(ConfigErrorFields a_errorField) {
+			switch (a_errorField) {
+			case(Garbage):
+				for (auto message : garbage) _logger::info("    {}", message);
+				break;
+			case(ArtErrors):
+				for (auto message : artErrors) _logger::info("    {}", message);
+				break;
+			case(MissingMasters):
+				for (auto message : missingMasters) _logger::info("    {}", message);
+				break;
+			case(MissingWeapons):
+				for (auto message : missingWeapons) _logger::info("    {}", message);
+				break;
+			default:
+				break;
+			}
+		}
+
+		//Called to add stuff to the appropriate field.
+		void AddError(ConfigErrorFields a_errorField, std::string a_message) {
+			switch (a_errorField) {
+			case(Garbage):
+				if (garbage.empty()) garbage.push_back(">" + configName);
+				garbage.push_back("    " + a_message);
+				break;
+			case(ArtErrors):
+				if (garbage.empty()) artErrors.push_back(">" + configName);
+				artErrors.push_back("    " + a_message);
+				break;
+			case(MissingMasters):
+				if (garbage.empty()) missingMasters.push_back(">" + configName);
+				missingMasters.push_back("    " + a_message);
+				break;
+			case(MissingWeapons):
+				if (garbage.empty()) missingWeapons.push_back(">" + configName);
+				missingWeapons.push_back("    " + a_message);
+				break;
+			default:
+				break;
+			}
 		}
 	};
 
-	//Returns true if the given vector contains the given string.
-	bool VectorHasString(std::vector<std::string>* a_vector, std::string a_string) {
-
-		for (std::string string : *a_vector) {
-			if (string == a_string) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	void AddErrorToLog(ParseConfigsErrors* a_errorHolder, int a_pos, std::string a_msg) {
-		a_errorHolder->errorsExist = true;
-
-		switch (a_pos) {
-		case (0):
-			a_errorHolder->caughtErrors.push_back(a_msg);
-			break;
-		case (1):
-			a_errorHolder->caughtGarbage.push_back(a_msg);
-			break;
-		case (2):
-			a_errorHolder->incompatibleConfigs.push_back(a_msg);
-			break;
-		case (3):
-			a_errorHolder->invalidConfigs.push_back(a_msg);
-			break;
-		case (4):
-			a_errorHolder->missingMasters.push_back(a_msg);
-			break;
-		case (5):
-			a_errorHolder->invalidArts.push_back(a_msg);
-			break;
-		default:
-			break;
-		}
-	}
-
-	//Returns true if a mod is installed.
-	bool IsModPresent(std::string a_fileName) {
-		std::string_view modName = std::string_view(a_fileName);
-
-		RE::TESDataHandler* dataHandler = RE::TESDataHandler::GetSingleton();
-		const RE::TESFile* mod;
-		mod = dataHandler->LookupLoadedModByName(modName);
-
-		if (mod) {
-			return true;
-		}
-
-		mod = dataHandler->LookupLoadedLightModByName(modName);
-
-		if (mod) {
-			return true;
-		}
-
-		return false;
-
-	}
-
-	//Returns a FormID from a given string. Logs an error if the string cannot be parsed, and throws an exception.
-	RE::FormID GetFormIDFromString(std::string a_string) {
-		RE::FormID result;
-		std::istringstream ss{ a_string };
-		ss >> std::hex >> result;
-		return result;
-	}
-
-	RE::SpellItem* GetSpellFromFormID(RE::FormID a_FormID, std::string a_ModName) {
-		RE::SpellItem* response;
-		RE::TESForm* form = RE::TESDataHandler::GetSingleton()->LookupForm(a_FormID, a_ModName);
-		response = form ? form->As<RE::SpellItem>() : NULL;
-		return response;
-	}
-
-	RE::SpellItem* ResolveHandSwapData(std::string a_FormID, std::string a_artSource) {
-		RE::SpellItem* response = NULL;
-		response = GetSpellFromFormID(GetFormIDFromString(a_FormID), a_artSource);
-		return response;
-	}
-
-	bool IsSwapLegal(Json::Value a_Data, std::string a_ArtSource) {
-
-		Json::Value left = a_Data["Left"];
-		Json::Value right = a_Data["Right"];
-
-		if (!(left && right)) {
-
-			return false;
-		}
-
-		if (left) {
-			std::string contents = left.asString();
-			RE::FormID result;
-			result = GetFormIDFromString(contents);
-
-			if (!result) return false;
-			RE::SpellItem* art = GetSpellFromFormID(result, a_ArtSource);
-			if (!art) return false;
-		}
-
-		if (right) {
-			std::string contents = right.asString();
-			RE::FormID result;
-			result = GetFormIDFromString(contents);
-
-			if (!result) return false;
-			RE::SpellItem* art = GetSpellFromFormID(result, a_ArtSource);
-			if (!art) return false;
-		}
-
-		Json::Value weaponID = a_Data["WeaponID"];
-		Json::Value keywordID = a_Data["WeaponKeywords"];
-
-		//Neither present, one should.
-		if (!(weaponID && keywordID)) return false;
-
-		//Both present when they shouldn't.
-		if (weaponID && keywordID) return false;
-
-		if (weaponID) {
-			Json::Value::Members weaponIDs = weaponID.getMemberNames();
-			for (auto weaponID : weaponIDs) {
-				if (!IsModPresent(weaponID)) return false;
-				RE::FormID foundID = GetFormIDFromString(weaponID);
-				if (!foundID) return false;
-			}
-		}
-		return true;
-	}
-
 	//Returns if the config is valid (all mods present and version code correct).
-	bool IsConfigValid(std::filesystem::path a_path, ParseConfigsErrors* a_errorHolder) {
+	bool IsConfigValid(std::filesystem::path a_path, ConfigError* a_errorHolder) {
 		
 		std::ifstream rawJSON(a_path.string());
 		Json::Reader  JSONReader;
 		Json::Value   JSONFile;
 		JSONReader.parse(rawJSON, JSONFile);
 
+		//Empty config. Ignore and stop parsing.
 		if (JSONFile.empty()) {
-			AddErrorToLog(a_errorHolder, 3, ">" + a_path.filename().string());
-			AddErrorToLog(a_errorHolder, 3, "    Empty config file.");
+			a_errorHolder->isEmpty = true;
 			return false;
 		}
 
+		//Config that requires a new version of the mod. Ignore and stop parsing.
 		int minVersion;
 
 		try {
 			minVersion = JSONFile["MinimumEnchanterVersion"].asInt();
 		}
 		catch (Json::Exception e) {
-			AddErrorToLog(a_errorHolder, 3, ">" + a_path.filename().string());
-			AddErrorToLog(a_errorHolder, 3, "    Could not read minimum requirement.");
+			a_errorHolder->AddError(Garbage, "Could not read the minimum version required.");
 			return false;
 		}
 
 		if (minVersion > SingletonHolder::ConditionHolder::GetSingleton()->GetVersion()) {
-			AddErrorToLog(a_errorHolder, 2, ">" + a_path.filename().string());
-			AddErrorToLog(a_errorHolder, 2, "    This config requires at least version " + std::to_string(minVersion));
+			a_errorHolder->requiresUpdate = true;
 			return false;
 		}
 
+		//From here: Try to parse all errors.
+		bool validConfig = true;
+
+		//Special flag error check.
 		Json::Value artType;
 
 		try {
 			artType = JSONFile["SpecialFlag"].asString();
 
-			if (!(artType == "Additive" || artType == "Exclusive" || artType == "Overwrite")) {
-				AddErrorToLog(a_errorHolder, 3, ">" + a_path.filename().string());
-				AddErrorToLog(a_errorHolder, 3, "    Unexpected value in SpecialFlag.");
-				return false;
+			if (!(artType.empty() || artType == "Additive" || artType == "Exclusive" || artType == "Low Priority")) {
+				a_errorHolder->AddError(Garbage, "Unexpected value in SpecialFlag.");
+				validConfig =  false;
 			}
 		}
 		catch (Json::Exception e) {
-			AddErrorToLog(a_errorHolder, 3, ">" + a_path.filename().string());
-			AddErrorToLog(a_errorHolder, 3, "    Failed to read the SpecialFlag field.");
-			return false;
+			a_errorHolder->AddError(Garbage, "Exception caught while trying to read SpecialFlag.");
+			validConfig =  false;
 		}
 
+		//Enchantment Keywords error check.
 		Json::Value enchantmentKeywords;
 
 		try {
 			enchantmentKeywords = JSONFile["EnchantmentKeywords"];
 
 			if (!enchantmentKeywords.isArray()) {
-				AddErrorToLog(a_errorHolder, 3, ">" + a_path.filename().string());
-				AddErrorToLog(a_errorHolder, 3, "    Expected an array in EnchantmentKeywords, but did not find one.");
-				return false;
+				a_errorHolder->AddError(Garbage, "EnchantmentKeywords is not an array.");
+				validConfig =  false;
 			}
 		}
 		catch (Json::Exception e) {
-			AddErrorToLog(a_errorHolder, 3, ">" + a_path.filename().string());
-			AddErrorToLog(a_errorHolder, 3, "    Failed to read the EnchantmentKeywords field.");
-			return false;
+			a_errorHolder->AddError(Garbage, "Exception caught while trying to read EnchantmentKeywords");
+			validConfig =  false;
 		}
 
-		if (enchantmentKeywords.empty()) {
-			AddErrorToLog(a_errorHolder, 3, ">" + a_path.filename().string());
-			AddErrorToLog(a_errorHolder, 3, "    No keywords found in the EnchantmentKeywords field.");
-			return false;
-		}
+		//This variable is reset so we don't add the config name several times. Gets reset between loops.
+		bool addedConfigName = false;
+		std::string lastEntry = "";
 
 		for (auto field : enchantmentKeywords) {
 			if (!field.isString()) {
-				AddErrorToLog(a_errorHolder, 3, ">" + a_path.filename().string());
-				AddErrorToLog(a_errorHolder, 3, "    Incorrect data type within EnchantmentKeywords. Expected string.");
-				return false;
+				a_errorHolder->AddError(Garbage, "An entry in EnchantmentKeywords is not a string. Last entry was: " + lastEntry);
+				validConfig =  false;
+				break;
 			}
+			lastEntry = field.asString();
 		}
 
+		//artSource error check.
 		Json::String artSourceMod;
 
 		try {
 			artSourceMod = JSONFile["ArtSource"].asString();
 
-			if (!(IsModPresent(artSourceMod))) {
-				AddErrorToLog(a_errorHolder, 4, ">" + a_path.filename().string());
-				AddErrorToLog(a_errorHolder, 4, "    Mod " + artSourceMod + " is missing, or extension is wrong.");
+			if (!(helperFunction::IsModPresent(artSourceMod))) {
+				a_errorHolder->AddError(MissingMasters, "Required mod " + artSourceMod + " not found.");
+				validConfig = false;
+			}
+		}
+		catch (Json::Exception e) {
+			a_errorHolder->AddError(Garbage, "Could not read ArtSource field.");
+			validConfig =  false;
+		}
+
+
+		//From here, we are evaluating each swap within the config file.
+		Json::Value swapField;
+
+		try {
+			swapField = JSONFile["SwapData"];
+			if (!swapField.isArray()) {
+				a_errorHolder->AddError(Garbage, "SwapData is not an array.");
 				return false;
 			}
 		}
 		catch (Json::Exception e) {
-			AddErrorToLog(a_errorHolder, 4, ">" + a_path.filename().string());
-			AddErrorToLog(a_errorHolder, 4, "    Failed to read the ArtSource field.");
-			return false;
-		}
-		return true;
-	}
-
-	//Returns true if the settings were successfully applied.
-	bool ApplySettings(Json::Value a_JSON, ParseConfigsErrors* a_errorHolder) {
-
-		const SingletonHolder::ConditionHolder* ConfigHolder;
-		try {
-			ConfigHolder = SingletonHolder::ConditionHolder::GetSingleton();
-		} catch (std::exception e) {
-			_logger::error("<{}> error occured.", e.what());
+			a_errorHolder->AddError(Garbage, "Could not read the SwapData field.");
 			return false;
 		}
 
-		Json::Value swaps = a_JSON["SwapData"];
-		std::string artSource = a_JSON["ArtSource"].asString();
-		std::vector<std::string> enchantmentKeywords;
+		for (auto swaps : swapField) {
+			for (auto swap : swaps) {
+				try {
+					if (!swap.isObject()) {
+						a_errorHolder->AddError(Garbage, "Unexpected value found in a swap definition. Expected an object.");
+						continue;
+					}
 
-		for (auto requiredKeyword : a_JSON["EnchantmentKeywords"]) {
-			enchantmentKeywords.push_back(requiredKeyword.asString());
-		}
+					//Check required weapons.
+					Json::Value requiredWeapons;
 
-		for (auto swap : swaps) {
-			for (auto swapData : swap) {
-				RE::SpellItem* leftSwap = ResolveHandSwapData(swapData["Left"].asString(), artSource);
-				RE::SpellItem* rightSwap = ResolveHandSwapData(swapData["Right"].asString(), artSource);
-				std::vector<std::string> weaponKeywords;
+					if (swap["WeaponID"]) {
+						try {
+							requiredWeapons = JSONFile["WeaponID"];
+						}
+						catch (Json::Exception e) {
+							a_errorHolder->AddError(Garbage, "Could not read WeaponID");
+							validConfig = false;
+							continue;
+						}
 
-				for (auto requiredKeyword : swapData["WeaponKeywords"]) {
-					weaponKeywords.push_back(requiredKeyword.asString());
+						std::vector<Json::Value> validWeapons;
+
+						for (auto field : requiredWeapons) {
+							if (!field.isObject()) {
+								a_errorHolder->AddError(Garbage, "Unexpected value in a WeaponID swap. Expected an object.");
+								validConfig = false;
+								break;
+							}
+							validWeapons.push_back(field);
+						}
+
+						for (auto field : validWeapons) {
+							if (!field.isObject()) {
+								a_errorHolder->AddError(Garbage, "Unexpected value in a WeaponID swap. Expected an object.");
+								validConfig = false;
+								continue;
+							}
+
+							auto modNames = field.getMemberNames();
+
+							if (modNames.empty()) {
+								a_errorHolder->AddError(Garbage, "A WeaponID swap does not contain any specified weapons.");
+								validConfig = false;
+								break;
+							}
+
+							if (modNames.size() > 1) {
+								a_errorHolder->AddError(Garbage, "A WeaponID swap contains too many specified weapons.");
+								validConfig = false;
+								break;
+							}
+
+							if (!helperFunction::IsModPresent(modNames.at(0))) {
+								a_errorHolder->AddError(Garbage, "Required master " + modNames.at(0) + " is not present.");
+								validConfig = false;
+							}
+							else {
+								RE::TESObjectWEAP* foundWeap = helperFunction::GetWeaponFromID(helperFunction::GetFormIDFromString(field[modNames.at(0)].asString()), modNames.at(0));
+								if (!foundWeap) {
+									a_errorHolder->AddError(MissingWeapons, "FormID " + field[modNames.at(0)].asString() + " in mod " + modNames.at(0) + " is not a weapon.");
+									validConfig = false;
+								}
+							}
+						}
+					}
+
+					//Check ignored weapons.
+					Json::Value ignoredWeapons;
+					if (swap["IgnoredWeaponID"]) {
+						try {
+							requiredWeapons = JSONFile["IgnoredWeaponID"];
+						}
+						catch (Json::Exception e) {
+							a_errorHolder->AddError(Garbage, "Could not read IgnoredWeaponID");
+							validConfig = false;
+							continue;
+						}
+
+						std::vector<Json::Value> validWeapons;
+
+						for (auto field : requiredWeapons) {
+							if (!field.isObject()) {
+								a_errorHolder->AddError(Garbage, "Unexpected value in a IgnoredWeaponID swap. Expected an object.");
+								validConfig = false;
+								continue;
+							}
+							validWeapons.push_back(field);
+						}
+
+						for (auto field : validWeapons) {
+							if (!field.isObject()) {
+								a_errorHolder->AddError(Garbage, "Unexpected value in a IgnoredWeaponID swap. Expected an object.");
+								validConfig = false;
+								continue;
+							}
+
+							auto modNames = field.getMemberNames();
+
+							if (modNames.empty()) {
+								a_errorHolder->AddError(Garbage, "A IgnoredWeaponID swap does not contain any specified weapons.");
+								validConfig = false;
+								break;
+							}
+
+							if (modNames.size() > 1) {
+								a_errorHolder->AddError(Garbage, "A IgnoredWeaponID swap contains too many specified weapons.");
+								validConfig = false;
+								break;
+							}
+
+							if (!helperFunction::IsModPresent(modNames.at(0))) {
+								continue;
+							}
+
+							RE::TESObjectWEAP* foundWeap = helperFunction::GetWeaponFromID(helperFunction::GetFormIDFromString(field[modNames.at(0)].asString()), modNames.at(0));
+							if (!foundWeap) {
+								a_errorHolder->AddError(MissingWeapons, "FormID " + field[modNames.at(0)].asString() + " in mod " + modNames.at(0) + " is not a weapon.");
+								validConfig = false;
+							}
+						}
+					}
+
+					//Check weapon keywords, if there are no required weapons.
+					Json::Value weaponKeywords = swap["WeaponKeywords"];
+
+					if (requiredWeapons && weaponKeywords) {
+						a_errorHolder->AddError(Garbage, "WeaponIDs were specified, but so were weapon keywords.");
+						validConfig = false;
+					}
+					else if (weaponKeywords) {
+						if (!weaponKeywords.isArray()) {
+							a_errorHolder->AddError(Garbage, "WeaponKeywords is not an array.");
+							validConfig = false;
+							continue;
+						}
+
+						for (auto keyword : weaponKeywords) {
+							if (!keyword.isString()) {
+								a_errorHolder->AddError(Garbage, "A keyword in WeaponKeywords is not a string.");
+								validConfig = false;
+								continue;
+							}
+						}
+					}
+
+					//Check ignored weapon keywords, if there are no required weapons.
+					Json::Value ignoredWeaponKeywords = swap["IgnoredKeywords"];
+
+					if (requiredWeapons && ignoredWeaponKeywords) {
+						a_errorHolder->AddError(Garbage, "IgnoredKeywords were specified, but so were weapon keyword exclusions.");
+						validConfig = false;
+					}
+					else if (ignoredWeaponKeywords) {
+						if (!ignoredWeaponKeywords.isArray()) {
+							a_errorHolder->AddError(Garbage, "IgnoredKeywords is not an array.");
+							validConfig = false;
+							continue;
+						}
+
+						for (auto keyword : ignoredWeaponKeywords) {
+							if (!keyword.isString()) {
+								a_errorHolder->AddError(Garbage, "A keyword in IgnoredKeywords is not a string.");
+								validConfig = false;
+								continue;
+							}
+						}
+					}
+
+					//Final check - check the arts.
+					Json::Value artLeftAbility;
+					if (!swap["Left"]) {
+						a_errorHolder->AddError(Garbage, "Left art field is missing.");
+						validConfig = false;
+					}
+					else {
+						artLeftAbility = swap["Left"];
+						if (!artLeftAbility.isString()) {
+							a_errorHolder->AddError(Garbage, "Left ability is not a string.");
+							validConfig = false;
+						}
+						else {
+							try {
+								RE::SpellItem* leftAbility = helperFunction::GetSpellFromFormID(helperFunction::GetFormIDFromString(artLeftAbility.asString()), artSourceMod);
+								if (!leftAbility) {
+									a_errorHolder->AddError(ArtErrors, "Left Ability is not a spell.");
+									validConfig = false;
+								}
+							}
+							catch (Json::Exception e) {
+								a_errorHolder->AddError(Garbage, "Caught an exception while trying to read the Left art swap source.");
+								validConfig = false;
+							}
+						}
+					}
+
+					Json::Value artRightAbility;
+					if (!swap["Right"]) {
+						a_errorHolder->AddError(Garbage, "Right art field is missing.");
+						validConfig = false;
+					}
+					else {
+						artRightAbility = swap["Right"];
+						if (!artRightAbility.isString()) {
+							a_errorHolder->AddError(Garbage, "Right ability is not a string.");
+							validConfig = false;
+						}
+						else {
+							try {
+								RE::SpellItem* rightAbility = helperFunction::GetSpellFromFormID(helperFunction::GetFormIDFromString(artRightAbility.asString()), artSourceMod);
+								if (!rightAbility) {
+									a_errorHolder->AddError(ArtErrors, "Right Ability is not a spell.");
+									validConfig = false;
+								}
+							}
+							catch (Json::Exception e) {
+								a_errorHolder->AddError(Garbage, "Caught an exception while trying to read the Right art swap source.");
+								validConfig = false;
+							}
+						}
+					}
 				}
-
-				ArtSwap newItem = ArtSwap(weaponKeywords, enchantmentKeywords, leftSwap, rightSwap);
-
-				SingletonHolder::ConditionHolder::GetSingleton()->CreateSwap(newItem);
+				catch (Json::Exception e) {
+					a_errorHolder->AddError(Garbage, "If you see this, remove this config or fix, idk what broke and I am not writing more if statements.");
+					validConfig = false;
+				}
 			}
 		}
-
-		return true;
+		return validConfig;
 	}
 
 	//Called externally, parses all valid configs.
@@ -378,40 +429,62 @@ namespace ConfigParser {
 		_logger::info("------------------------------------->    Report   <--------------------------------------");
 		_logger::info("Begining reading config files.");
 		const std::filesystem::path configDirectory{ R"(.\Data\Enchantment Effects Extender)" };
+		std::vector<ConfigError> caughtErrors;
 
 		if (!std::filesystem::exists(configDirectory)) {
 			_logger::info("No config directory found in the Data folder.");
 			return;
 		}
 
-		ParseConfigsErrors errorHolder = ParseConfigsErrors();
 		std::vector<std::string> validConfigs = std::vector<std::string>();
 		int configCount = 0;
+		std::string lastRead = "";
 
 		try {
 			for (const auto& file : std::filesystem::directory_iterator(configDirectory)) {
 				if (file.path().extension() != ".json") {
-					AddErrorToLog(&errorHolder, 0, file.path().string());
 					continue;
 				}
 
+				std::string configName = file.path().filename().string();
+				lastRead = configName;
 				++configCount;
+				ConfigError tempConfigError = ConfigError();
+				tempConfigError.configName = configName;
+				tempConfigError.isCorrupted = false;
+				tempConfigError.isEmpty = false;
+				tempConfigError.requiresUpdate = false;
 
-				if (!IsConfigValid(file, &errorHolder)) {
+				if (!IsConfigValid(file, &tempConfigError)) {
+					caughtErrors.push_back(tempConfigError);
 					continue;
 				}
+				validConfigs.push_back(file.path().filename().string());	
+
 				std::ifstream rawJSON(file.path().string());
 				Json::Reader  JSONReader;
 				Json::Value   JSONFile;
 				JSONReader.parse(rawJSON, JSONFile);
+				Json::Value swapData = JSONFile["SwapData"];
 
-				if (!ApplySettings(JSONFile, &errorHolder)) continue;
-				validConfigs.push_back(file.path().filename().string());	
+				for (auto swap : swapData) {
+					ArtSwap::ArtSwap newSwap = ArtSwap::ArtSwap();
+					std::vector<std::string> enchantmentKeywords;
+					auto swapInfo = swap.getMemberNames().at(0);
+
+					for (auto keyword : JSONFile["EnchantmentKeywords"]) enchantmentKeywords.push_back(keyword.asString());
+					RE::SpellItem* leftAbility = helperFunction::GetSpellFromFormID(helperFunction::GetFormIDFromString(swap[swapInfo]["Left"].asString()), JSONFile["ArtSource"].asString());
+					RE::SpellItem* rightAbility = helperFunction::GetSpellFromFormID(helperFunction::GetFormIDFromString(swap[swapInfo]["Right"].asString()), JSONFile["ArtSource"].asString());
+
+					newSwap.SetAttributes(swap, JSONFile["SpecialFlag"].asString(), JSONFile["ArtSource"].asString(), enchantmentKeywords, leftAbility, rightAbility);
+					SingletonHolder::ConditionHolder::GetSingleton()->Register(newSwap);
+				}
 			}
 		}
 		catch (std::exception e) {
 			_logger::error("Critical error <{}> caught while trying to read config files. Report to the author of Enchantment Effects Extender.", e.what());
 			_logger::error("Assuming broken application state. Configs will not be parsed, and no arts will be distributed.");
+			_logger::error("Managed to read {} configs before failure. Last config read was {}.", configCount, lastRead);
 			return;
 		}
 		_logger::info("Finished reading config files.");
@@ -420,14 +493,23 @@ namespace ConfigParser {
 		for (auto success : validConfigs) {
 			_logger::info("    >{}", success);
 		}
-		auto swaps = SingletonHolder::ConditionHolder::GetSingleton()->GetSwaps();
-		_logger::info("Number of patches applied: {}.", swaps->size());
+
+		_logger::info("Number of patches applied: {}.", SingletonHolder::ConditionHolder::GetSingleton()->GetNumberOfPatches());
+		_logger::info("");
+		SingletonHolder::ConditionHolder::GetSingleton()->CreateWeaponCache();
 		_logger::info("");
 		_logger::info("--------------------------------->    End of Report    <-----------------------------------");
 		_logger::info("");
 		_logger::info("");
-		if (errorHolder.errorsExist) {
-			errorHolder.LogMessages();
+
+		if (!caughtErrors.empty()) {
+			for (auto error : caughtErrors) {
+				error.LogErrors(UnexpectedFormat);
+				error.LogErrors(Garbage);
+				error.LogErrors(ArtErrors);
+				error.LogErrors(MissingMasters);
+				error.LogErrors(MissingWeapons);
+			}
 		}
 		_logger::info("Enjoy your game!");
 	}
