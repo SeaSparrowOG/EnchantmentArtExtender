@@ -19,11 +19,6 @@ enum class ArtSwapMode {
 	LowPriority = 2  //Is applied only if no other swaps would be applied.
 };
 
-enum class ActorCacheAction {
-	RemoveAbility = 0,
-	AddAbility = 1
-};
-
 //Used to bind Papyrus Functions.
 #define BIND(a_method, ...) a_vm->RegisterFunction(#a_method##sv, script, a_method __VA_OPT__(, ) __VA_ARGS__)
 using VM = RE::BSScript::Internal::VirtualMachine;
