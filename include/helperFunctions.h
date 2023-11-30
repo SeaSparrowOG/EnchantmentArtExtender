@@ -13,4 +13,6 @@ namespace helperFunction {
 
 	bool VectorContainsString(std::vector<std::string>* a_vector, std::string a_element);
 	bool VectorContainsWeapon(std::vector<RE::TESObjectWEAP*>* a_vector, RE::TESObjectWEAP* a_element);
+	bool VectorContainsSpell(std::vector<RE::SpellItem*>* a_vector, RE::SpellItem* a_element);
+	void EvaluateAbilities(RE::Actor* a_actor);
 }

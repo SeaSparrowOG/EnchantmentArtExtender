@@ -168,34 +168,14 @@ namespace SingletonHolder {
 			_logger::info("Finished generating the weapon cache in {}ms. Created {} entries.", std::chrono::duration<double, std::milli>(execTime).count(), weaponCache.size());
 		}
 
-		void ModifyActorCache(RE::Actor* a_actor, ActorCacheAction a_action, RE::SpellItem* a_ability = nullptr) {
-			switch (a_action) {
-			case(ActorCacheAction::AddToCache):
-				break;
-			case(ActorCacheAction::ClearFromCache):
-				break;
-			case(ActorCacheAction::AddAbilityLeft):
-				break;
-			case(ActorCacheAction::AddAbilityRight):
-				break;
-			case(ActorCacheAction::RemoveAbilityLeft):
-				break;
-			case(ActorCacheAction::RemoveAbilityRight):
-				break;
-			default:
-				break;
-
-			}
-		}
-
 		ConditionHolder(const ConditionHolder& obj) = delete;
+
 	private:
 		int                           iVerCode;
 		std::vector<ArtSwap::ArtSwap> AdditiveArtSwaps;
 		std::vector<ArtSwap::ArtSwap> ExclusiveArtSwaps;
 		std::vector<ArtSwap::ArtSwap> LowPrioArtSwaps;
 		std::unordered_map<RE::TESObjectWEAP*, std::vector<ArtSwap::ArtSwap>> weaponCache;
-		std::unordered_map<RE::Actor*, std::vector<RE::SpellItem*>> actorCache;
 		std::vector<RE::SpellItem*>   allAbilities;
 
 		ConditionHolder() {

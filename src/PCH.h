@@ -20,12 +20,8 @@ enum class ArtSwapMode {
 };
 
 enum class ActorCacheAction {
-	AddToCache = 0,
-	RemoveAbilityLeft = 1,
-	RemoveAbilityRight = 2,
-	AddAbilityLeft = 3,
-	AddAbilityRight = 4,
-	ClearFromCache = 5
+	RemoveAbility = 0,
+	AddAbility = 1
 };
 
 //Used to bind Papyrus Functions.

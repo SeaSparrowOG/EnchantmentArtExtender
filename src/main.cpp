@@ -1,6 +1,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include "configParser.h"
 #include "equipEventHandler.h"
+#include "actorEventHandler.h"
 
 namespace logger = SKSE::log;
 
@@ -27,6 +28,8 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
     case SKSE::MessagingInterface::kDataLoaded: {
         ConfigParser::ParseConfigs();
         EquipEventHandler::EquipEvent::GetSingleton()->RegisterListener();
+        ActorEventHandler::ActorLoadedEvent::GetSingleton()->RegisterActorLoadedEvent();
+        ActorEventHandler::ActorDeathEvent::GetSingleton()->RegisterActorDeathEvent();
         break;
     }
     default:
