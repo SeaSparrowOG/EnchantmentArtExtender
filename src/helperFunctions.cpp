@@ -78,6 +78,48 @@ namespace helperFunction {
 		return false;
 	}
 
+	void AppendMatchingSwapsToVector(std::vector<RE::SpellItem*>* a_vec, RE::TESObjectWEAP* a_weap, bool a_left, RE::ExtraEnchantment* a_extraEnchant = nullptr) {
+		auto conditionSingleton = SingletonHolder::ConditionHolder::GetSingleton();
+
+		if (!a_extraEnchant) {
+			auto weaponCache = conditionSingleton->GetWeaponCache();
+			if (weaponCache->find(a_weap) != weaponCache->end()) {
+				std::vector<ArtSwap::ArtSwap> foundSwaps;
+				foundSwaps = weaponCache->at(a_weap);
+
+				for (auto& swap : foundSwaps) {
+					a_vec->push_back(swap.GetAbility(a_left));
+				}
+			}
+		}
+		else {
+			RE::EnchantmentItem* weaponEnchant = a_extraEnchant->enchantment;
+			if (!weaponEnchant) return;
+
+			auto foundSwap = conditionSingleton->GetBestMatchingSwap(*conditionSingleton->GetSwaps(ArtSwapMode::Exclusive), a_weap, weaponEnchant);
+
+			if (!foundSwap.GetName().empty()) {
+				a_vec->push_back(foundSwap.GetAbility(a_left));
+			}
+
+			if (!a_vec->empty()) return;
+
+			for (auto& additiveSwap : *conditionSingleton->GetSwaps(ArtSwapMode::Additive)) {
+				if (additiveSwap.IsMatch(a_weap, weaponEnchant)) {
+					a_vec->push_back(foundSwap.GetAbility(a_left));
+				}
+			}
+
+			if (!a_vec->empty()) return;
+
+			foundSwap = conditionSingleton->GetBestMatchingSwap(*conditionSingleton->GetSwaps(ArtSwapMode::LowPriority), a_weap);
+
+			if (!foundSwap.GetName().empty()) {
+				a_vec->push_back(foundSwap.GetAbility(a_left));
+			}
+		}
+	}
+
 	void EvaluateAbilities(RE::Actor* a_actor) {
 		auto weaponCache = SingletonHolder::ConditionHolder::GetSingleton()->GetWeaponCache();
 		std::vector<ArtSwap::ArtSwap> foundLeftSwaps;
@@ -89,27 +131,35 @@ namespace helperFunction {
 		float leftEnchantAmount = leftEnchant ? a_actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kLeftItemCharge) : 0.0f;
 		bool bLeftEnchanted = leftEnchantAmount > 0.0 ? true : false;
 
-		if (bLeftEnchanted) {
-			if (weaponCache->find(leftEquipped) != weaponCache->end()) {
-				std::vector<ArtSwap::ArtSwap> foundSwaps;
-				foundSwaps = weaponCache->at(leftEquipped);
-
-				for (auto& swap : foundSwaps) {
-					appliedAbilities.push_back(swap.GetAbility());
-				}
-			}
-		}
+		if (bLeftEnchanted) AppendMatchingSwapsToVector(&appliedAbilities, leftEquipped, true);
 
 		auto rightEquipped = a_actor->GetEquippedObject(false) ? a_actor->GetEquippedObject(false)->As<RE::TESObjectWEAP>() : nullptr;
 		auto rightEnchant = rightEquipped ? rightEquipped->formEnchanting : nullptr;
 		float rightEnchantAmount = rightEnchant ? a_actor->AsActorValueOwner()->GetActorValue(RE::ActorValue::kRightItemCharge) : 0.0f;
 		bool bRightEnchanted = rightEnchantAmount > 0.0 ? true : false;
 
-		if (bRightEnchanted) {
-			if (weaponCache->find(rightEquipped) != weaponCache->end()) {
-				std::vector<ArtSwap::ArtSwap> foundSwaps = weaponCache->at(rightEquipped);
-				for (auto& swap : foundSwaps) {
-					appliedAbilities.push_back(swap.GetAbility(false));
+		if (bRightEnchanted) AppendMatchingSwapsToVector(&appliedAbilities, rightEquipped, false);
+
+		//Check for player-made enchantments
+		const auto process = a_actor->GetActorRuntimeData().currentProcess;
+		const auto middleHigh = process ? process->middleHigh : nullptr;
+		const auto rightHand = middleHigh ? middleHigh->rightHand : nullptr;
+		const auto leftHand = middleHigh ? middleHigh->leftHand : nullptr;
+
+		if (leftEquipped && leftHand && leftHand->object) {
+			if (const auto& extraLists = leftHand->extraLists) {
+				for (const auto& extraList : *extraLists) {
+					const auto exEnch = extraList->GetByType<RE::ExtraEnchantment>();
+					if (exEnch && exEnch->enchantment) AppendMatchingSwapsToVector(&appliedAbilities, leftEquipped, true, exEnch);
+				}
+			}
+		}
+
+		if (rightEquipped && rightHand && rightHand->object) {
+			if (const auto& extraLists = rightHand->extraLists) {
+				for (const auto& extraList : *extraLists) {
+					const auto exEnch = extraList->GetByType<RE::ExtraEnchantment>();
+					if (exEnch && exEnch->enchantment) AppendMatchingSwapsToVector(&appliedAbilities, rightEquipped, false, exEnch);
 				}
 			}
 		}

@@ -13,7 +13,7 @@ namespace SingletonHolder {
 		_weaponCache*                  GetWeaponCache();
 		std::vector<RE::SpellItem*>*   GetAllAbilities();
 		std::vector<ArtSwap::ArtSwap>* GetSwaps(ArtSwapMode a_mode);
-
+		ArtSwap::ArtSwap               GetBestMatchingSwap(std::vector<ArtSwap::ArtSwap> a_swaps, RE::TESObjectWEAP* a_weapon, RE::EnchantmentItem* a_enchant = nullptr);
 		ConditionHolder(const ConditionHolder& obj) = delete;
 	private:
 		int                           iVerCode;

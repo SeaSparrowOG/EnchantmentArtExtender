@@ -7,8 +7,11 @@ namespace SingletonHolder {
 	* @param a_swaps The array to iterate over.
 	* @param a_weapon The weapon to match against. If it has extra data, that is taken into account.
 	*/
-	ArtSwap::ArtSwap GetBestMatchingSwap(std::vector<ArtSwap::ArtSwap> a_swaps, RE::TESObjectWEAP* a_weapon) {
-		RE::EnchantmentItem* weaponEnchant = a_weapon->formEnchanting;
+	ArtSwap::ArtSwap ConditionHolder::GetBestMatchingSwap(std::vector<ArtSwap::ArtSwap> a_swaps, RE::TESObjectWEAP* a_weapon, RE::EnchantmentItem* a_enchant) {
+		RE::EnchantmentItem* weaponEnchant;
+		if (!a_enchant) weaponEnchant = a_weapon->formEnchanting;
+		else weaponEnchant = a_enchant;
+
 		ArtSwap::ArtSwap response = ArtSwap::ArtSwap();
 		if (!weaponEnchant) return response;
 
