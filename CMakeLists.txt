@@ -33,6 +33,7 @@ set(headers
         include/singletonHolder.h) 
 
 set(sources
+        src/singletonHolder.cpp
         src/actorEventHandler.cpp
         src/helperFunctions.cpp
         src/artSwap.cpp

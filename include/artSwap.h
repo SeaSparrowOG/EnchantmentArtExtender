@@ -5,6 +5,7 @@ namespace ArtSwap {
 	class ArtSwap {
 	private:
 		ArtSwapMode                      mode;                        //See the enum below for more information.
+		std::string                      swapName;                    //Mostly used for debuging. 
 		std::vector<std::string>         requiredWeaponKeywords;      //All the keyword strings here must be present on the weapon in order for it to receive the new VFX.
 		std::vector<std::string>         excludeWeaponKeywords;       //The weapon must NOT have these keyword strings in order to receive the new VFX.
 		std::vector<std::string>         requiredEnchantmentKeywords; //The enchantment on the weapon must have all these keywords in order for it to reveive the new VFX.
@@ -38,11 +39,13 @@ namespace ArtSwap {
 		//Basic getters - these probably don't need to be public. But they will be for now.
 		ArtSwapMode                      GetMode();
 		RE::SpellItem*                   GetAbility(bool a_left = true);
+		std::string                      GetName();
 		std::vector<std::string>         GetRequiredWeaponKeywords();
 		std::vector<std::string>         GetExcludedWeaponKeywords();
 		std::vector<std::string>         GetRequiredEnchantmentKeywords();
 		std::vector <RE::TESObjectWEAP*> GetRequiredWeapons();
 		std::vector <RE::TESObjectWEAP*> GetIgnoredWeapons();
+		void                             SetName(std::string a_name);
 
 		//Returns the degree to which the given weapon and enchantment matches this swap, represented as a pair of bool/int. The int is the degree
 		//of the match. The higher the better. The bool represents if the match is a "required weapon" match (valued more highly than the keywords).

@@ -10,8 +10,8 @@
 
 using namespace std::literals;
 
-#define  _logger SKSE::log
-
+#define  _logger      SKSE::log
+#define  _weaponCache std::unordered_map<RE::TESObjectWEAP*, std::vector<ArtSwap::ArtSwap>>
 //Slight readability tweak.
 enum class ArtSwapMode {
 	Additive = 0,    //Layered on top of other additive swaps.

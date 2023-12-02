@@ -94,7 +94,7 @@ namespace helperFunction {
 				std::vector<ArtSwap::ArtSwap> foundSwaps;
 				foundSwaps = weaponCache->at(leftEquipped);
 
-				for (auto swap : foundSwaps) {
+				for (auto& swap : foundSwaps) {
 					appliedAbilities.push_back(swap.GetAbility());
 				}
 			}
@@ -107,9 +107,8 @@ namespace helperFunction {
 
 		if (bRightEnchanted) {
 			if (weaponCache->find(rightEquipped) != weaponCache->end()) {
-				std::vector<ArtSwap::ArtSwap> foundSwaps;
-				foundSwaps = weaponCache->at(rightEquipped);
-				for (auto swap : foundSwaps) {
+				std::vector<ArtSwap::ArtSwap> foundSwaps = weaponCache->at(rightEquipped);
+				for (auto& swap : foundSwaps) {
 					appliedAbilities.push_back(swap.GetAbility(false));
 				}
 			}
