@@ -115,7 +115,7 @@ namespace ArtSwap {
 	
 	void ArtSwap::AddRequiredWeaponKeyword(std::string a_keywordString) {
 		if (a_keywordString.empty()) return;
-		for (auto keyword : requiredWeaponKeywords) {
+		for (auto keyword : this->requiredWeaponKeywords) {
 			if (keyword == a_keywordString) return;
 		}
 		this->requiredWeaponKeywords.push_back(a_keywordString);

@@ -19,7 +19,6 @@ namespace SingletonHolder {
 		bool matchedWeapon = false;
 
 		for (auto& swap : a_swaps) {
-
 			if (swap.IsMatch(a_weapon, weaponEnchant)) {
 				int matchRating = 0;
 				matchRating += swap.GetRequiredEnchantmentKeywords().size();
@@ -43,7 +42,6 @@ namespace SingletonHolder {
 				response = swap;
 			}
 		}
-
 		return response;
 	}
 

@@ -140,7 +140,7 @@ namespace ConfigParser {
 					RE::SpellItem* leftAbility = helperFunction::GetSpellFromFormID(helperFunction::GetFormIDFromString(swap[swapInfo]["Left"].asString()), JSONFile["ArtSource"].asString());
 					RE::SpellItem* rightAbility = helperFunction::GetSpellFromFormID(helperFunction::GetFormIDFromString(swap[swapInfo]["Right"].asString()), JSONFile["ArtSource"].asString());
 
-					newSwap.SetAttributes(swap, JSONFile["SpecialFlag"].asString(), JSONFile["ArtSource"].asString(), enchantmentKeywords, leftAbility, rightAbility);
+					newSwap.SetAttributes(swap[swapInfo], JSONFile["SpecialFlag"].asString(), JSONFile["ArtSource"].asString(), enchantmentKeywords, leftAbility, rightAbility);
 					newSwap.SetName(swapInfo);
 					SingletonHolder::ConditionHolder::GetSingleton()->Register(newSwap);
 				}

@@ -170,7 +170,6 @@ namespace helperFunction {
 		for (auto ability : appliedAbilities) {
 			if (!a_actor->HasSpell(ability)) a_actor->AddSpell(ability);
 			else {
-				_logger::info("{} already had {}. Reapplying...", a_actor->GetName(), ability->GetName());
 				a_actor->AddSpell(ability);
 			}
 		}
