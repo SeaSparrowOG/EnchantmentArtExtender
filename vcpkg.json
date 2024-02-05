@@ -1,10 +1,21 @@
 {
-  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-  "name": "perk-renamer",
-  "version-string": "1.0.0",
+  "name": "rainextinguishesfires",
+  "version-string": "5.0.0",
+  "description": "Manages Fire Extinguishing For Skyrim",
+  "homepage": "",
+  "license": "MIT",
   "dependencies": [
-    "commonlibsse-ng",
+    "rsm-binary-io",
+    "spdlog",
     "clib-util",
-    "jsoncpp"
-  ]
-} 
+    "jsoncpp",
+    "xbyak"
+  ],
+  "overrides": [
+    {
+      "name": "fmt",
+      "version": "9.1.0"
+    }
+  ],
+  "builtin-baseline": "b7dba7f9aad09a56900f21cd78cfda1258e54e38"
+}

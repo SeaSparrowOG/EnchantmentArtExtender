@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "cmakeMinimumRequired": {
     "major": 3,
     "minor": 21,
@@ -7,99 +7,60 @@
   },
   "configurePresets": [
     {
-      "name": "base",
+      "name": "cmake-dev",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "$env{COMMONLIBSSE_COMPILER} $env{COMMONLIBSSE_PLATFORM} $env{COMMONLIBSSE_TEXT}"
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+        "CMAKE_CXX_FLAGS": "/EHsc /MP /W4 /external:anglebrackets /external:W0 $penv{CXXFLAGS}"
       }
     },
     {
       "name": "vcpkg",
       "hidden": true,
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-windows-skse",
-        "VCPKG_HOST_TRIPLET": "x64-windows-skse",
-        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake",
-        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+        "VCPKG_OVERLAY_PORTS": "${sourceDir}/cmake/ports/"
       }
     },
     {
-      "name": "win32",
+      "name": "windows",
       "hidden": true,
-      "environment": {
-        "COMMONLIBSSE_PLATFORM": "-DWIN32_LEAN_AND_MEAN -DNOMINMAX"
+      "cacheVariables": {
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
       }
     },
     {
-      "name": "win32-unicode",
+      "name": "vs2022",
       "hidden": true,
-      "inherits": "win32",
-      "environment": {
-        "COMMONLIBSSE_TEXT": "-DUNICODE -D_UNICODE"
-      }
+      "generator": "Visual Studio 17 2022",
+      "toolset": "v143"
     },
     {
-      "name": "x64",
+      "name": "ae",
       "hidden": true,
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "BUILD_SKYRIMAE": true,
+        "SUPPORT_LATEST": true
       }
     },
     {
-      "name": "msvc",
-      "hidden": true,
-      "environment": {
-        "COMMONLIBSSE_COMPILER": "/permissive- /Zc:preprocessor /EHsc $penv{CXXFLAGS}"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-msvc-x64",
-          "enableMicrosoftCodeAnalysis": true,
-          "enableClangTidyCodeAnalysis": true
-        }
-      }
-    },
-    {
-      "name": "build-debug-msvc",
+      "name": "vs2022-windows-vcpkg-ae",
       "inherits": [
-        "base",
+        "cmake-dev",
         "vcpkg",
-        "win32-unicode",
-        "x64",
-        "msvc"
-      ],
-      "displayName": "Debug",
-      "description": "Debug build for testing.",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug-msvc",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "type": "STRING",
-          "value": "Debug"
-        }
-      }
-    },
+        "windows",
+        "vs2022",
+        "ae"
+      ]
+    }
+  ],
+  "buildPresets": [
     {
-      "name": "build-release-msvc",
-      "inherits": [
-        "base",
-        "vcpkg",
-        "win32-unicode",
-        "x64",
-        "msvc"
-      ],
-      "displayName": "Release",
-      "description": "Optimized release build.",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release-msvc",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "type": "STRING",
-          "value": "Release"
-        }
-      }
+      "name": "Release",
+      "configurePreset": "vs2022-windows-vcpkg-ae",
+      "configuration": "Release"
     }
   ]
 }
