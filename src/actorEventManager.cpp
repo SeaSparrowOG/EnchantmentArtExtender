@@ -145,12 +145,6 @@ namespace ActorEvents {
 		auto eventForm = eventID ? RE::TESForm::LookupByID(eventID) : nullptr;
 		auto eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
 		if (!eventActor) return RE::BSEventNotifyControl::kContinue;
-
-		RE::TESForm* leftForm = eventActor->GetEquippedObject(true);
-		RE::TESObjectWEAP* leftWeapon = leftForm ? leftForm->As<RE::TESObjectWEAP>() : nullptr;
-		RE::TESForm* rightForm = eventActor->GetEquippedObject(false);
-		RE::TESObjectWEAP* rightWeapon = rightForm ? rightForm->As<RE::TESObjectWEAP>() : nullptr;
-		if (!(rightWeapon || leftWeapon)) return continueEvent;
 		
 		EvaluateActor(eventActor);
 		return continueEvent;
@@ -162,11 +156,6 @@ namespace ActorEvents {
 		auto reference = a_event->actor;
 		auto* actor = a_event ? reference->As<RE::Actor>() : nullptr;
 		if (!actor) return continueEvent;
-
-		auto baseObject = a_event->baseObject;
-		auto* baseForm = a_event ? RE::TESObject::LookupByID(baseObject) : nullptr;
-		auto* baseWeapon = baseForm ? baseForm->As<RE::TESObjectWEAP>() : nullptr;
-		if (!baseWeapon) return continueEvent;
 
 		EvaluateActor(actor);
 		return continueEvent;

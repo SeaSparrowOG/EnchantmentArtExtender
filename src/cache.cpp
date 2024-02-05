@@ -171,20 +171,19 @@ namespace Cache {
 	swapDataVector StoredData::GetMatchingSwaps(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment) {
 		auto response = swapDataVector();
 		if (!(a_weap && a_enchantment)) return response;
+		if (this->weaponCache.contains(a_weap)) return this->weaponCache.at(a_weap);
 
 		auto* templateWeapon = a_weap->templateWeapon;
 		for (auto& swapEntry : this->storedSwaps) {
-			bool hasAllEnchantmentKeywords = false;
+			size_t matches = swapEntry.requiredEnchantmentKeywords.size();
 			for (auto& requiredEnchantmentKeyword : swapEntry.requiredEnchantmentKeywords) {
-				size_t matches = swapEntry.requiredEnchantmentKeywords.size();
 				for (auto* effect : a_enchantment->effects) {
-					if (effect->baseEffect->HasKeywordString(requiredEnchantmentKeyword))
+					if (effect->baseEffect->HasKeywordString(requiredEnchantmentKeyword)) {
 						--matches;
+					}
 				}
-				if (matches == 0)
-					hasAllEnchantmentKeywords = true;
 			}
-			if (!hasAllEnchantmentKeywords)
+			if (matches > 0)
 				continue;
 
 			if (!swapEntry.requiredWeapons.empty()) {
