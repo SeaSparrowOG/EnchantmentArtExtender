@@ -176,8 +176,8 @@ namespace Cache {
 	swapDataVector StoredData::GetMatchingSwaps(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment) {
 		auto response = swapDataVector();
 		auto exclusiveResponse = SwapData();
-
 		if (!(a_weap && a_enchantment)) return response;
+
 		if (this->weaponCache.contains(a_weap)) return this->weaponCache.at(a_weap);
 		if (this->invalidWeapons.contains(a_weap)) return response;
 
@@ -211,11 +211,13 @@ namespace Cache {
 						if (!hasExclusiveWeaponMatch && isSwapExclusive) {
 							previousMaxMatch = 0;
 							hasExclusiveWeaponMatch = true;
+							previousMaxMatch = matchingDegree;
 						}
 
 						if (isSwapExclusive && matchingDegree > previousMaxMatch) {
 							exclusiveResponse = swapEntry;
 							foundExclusiveMatch = true;
+							previousMaxMatch = matchingDegree;
 						}
 						response.push_back(swapEntry);
 					}
@@ -223,17 +225,20 @@ namespace Cache {
 						if (!hasExclusiveWeaponMatch && isSwapExclusive) {
 							previousMaxMatch = 0;
 							hasExclusiveWeaponMatch = true;
+							previousMaxMatch = matchingDegree;
 						}
 
 						if (isSwapExclusive && matchingDegree > previousMaxMatch) {
 							exclusiveResponse = swapEntry;
 							foundExclusiveMatch = true;
+							previousMaxMatch = matchingDegree;
 						}
 						response.push_back(swapEntry);
 					}
 				}
 			}
 			else {
+				if (hasExclusiveWeaponMatch) continue;
 				if (!swapEntry.excludedWeapons.empty()) {
 					matchingDegree += swapEntry.excludedWeapons.size();
 					bool isExcludedWeapon = false;
@@ -258,9 +263,9 @@ namespace Cache {
 					}
 					if (hasBadKeyword) continue;
 				}
-
 				bool hasAllKeywords = true;
 				matchingDegree += swapEntry.requiredWeaponKeywords.size();
+
 				for (auto& requiredKeyword : swapEntry.requiredWeaponKeywords) {
 					if (!a_weap->HasKeywordString(requiredKeyword))
 						hasAllKeywords = false;
@@ -269,6 +274,7 @@ namespace Cache {
 				if (isSwapExclusive && matchingDegree > previousMaxMatch) {
 					foundExclusiveMatch = true;
 					exclusiveResponse = swapEntry;
+					previousMaxMatch = matchingDegree;
 				}
 				response.push_back(swapEntry);
 			}
@@ -399,7 +405,6 @@ namespace Cache {
 		_loggerInfo("Applied {} patches.", this->storedSwaps.size());
 		_loggerInfo("The following patches were applied:");
 		_loggerInfo("==============================================");
-		this->DebugSwaps();
 		this->RegisterReadyWeapons();
 		return true;
 	}
