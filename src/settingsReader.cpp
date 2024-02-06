@@ -54,7 +54,7 @@ namespace Settings {
 		ErrorReport response = ErrorReport(config);
 		const char* expectedInformationNames[] = { "Left", "Right" };
 		const char* expectedInformationAtLeastOne[] = { "RequiredWeapons", "WeaponKeywords" };
-		const char* otherValidFields[] = { "ExcludedWeapons", "ExcludedWeaponKeywords" };
+		const char* otherValidFields[] = { "ExcludedWeapons", "ExcludedWeaponKeywords", "Exclusive" };
 		const char** allAllowedFields[] = { expectedInformationNames, expectedInformationAtLeastOne, otherValidFields };
 
 		//Empty, un-openable configs are reported in the original reader.
@@ -82,7 +82,7 @@ namespace Settings {
 		}
 
 		//Check 3: Check for garbage.
-		std::string expectedFields[] = { "MinimumVersion", "EnchantmentKeywords", "ArtSource", "SwapData" };
+		std::string expectedFields[] = { "MinimumVersion", "EnchantmentKeywords", "ArtSource", "SwapData", "Exclusive" };
 		auto allFields = a_JSON.getMemberNames();
 		for (auto field : allFields) {
 			bool fieldIsValid = false;
@@ -101,6 +101,7 @@ namespace Settings {
 		//Check 4: Unexpected objects in the top level.
 		std::string expectedString[] = { "ArtSource" };
 		std::string expectedList[] = { "EnchantmentKeywords" , "SwapData" };
+		std::string expectedBool[] = { "Exclusive" };
 
 		for (auto entry : expectedString) {
 			auto field = a_JSON[entry];
@@ -116,6 +117,14 @@ namespace Settings {
 			if (field.isArray()) continue;
 			response.valid = false;
 			response.expectedString.push_back(entry);
+		}
+
+		for (auto entry : expectedBool) {
+			auto field = a_JSON[entry];
+			if (!field) continue;
+			if (field.isBool()) continue;
+			response.valid = false;
+			response.expectedBool.push_back(entry);
 		}
 
 		//Check for garbage and missing masters in SwapData.

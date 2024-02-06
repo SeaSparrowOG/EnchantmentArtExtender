@@ -62,7 +62,7 @@ namespace {
 		_loggerInfo("        Right Ability: {}", clib_util::editorID::get_editorID(swap.rightAbility));
 		_loggerInfo("        Enchantment Keywords:");
 		for (auto& keyword : swap.requiredEnchantmentKeywords)
-			_loggerInfo("        >{}", keyword);
+			_loggerInfo("            >{}", keyword);
 
 		if (!swap.requiredWeaponKeywords.empty())
 			_loggerInfo("        Weapon Keywords:");
@@ -97,10 +97,15 @@ namespace Cache {
 			auto artSource = config["ArtSource"].asString();
 			if (!IsModPresent(artSource)) continue;
 
+			bool exclusive = false;
+			if (config["Exclusive"])
+				exclusive = config["Exclusive"].asBool();
+
 			auto swapData = config["SwapData"];
 			for (auto& data : swapData) {
 				SwapData newSwap = SwapData();
 				newSwap.artSource = artSource;
+				newSwap.exclusive = exclusive;
 
 				auto requiredKeywords = config["EnchantmentKeywords"];
 				for (auto& keyword : requiredKeywords) {
@@ -170,12 +175,26 @@ namespace Cache {
 
 	swapDataVector StoredData::GetMatchingSwaps(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment) {
 		auto response = swapDataVector();
+		auto exclusiveResponse = SwapData();
+
 		if (!(a_weap && a_enchantment)) return response;
 		if (this->weaponCache.contains(a_weap)) return this->weaponCache.at(a_weap);
+		if (this->invalidWeapons.contains(a_weap)) return response;
 
 		auto* templateWeapon = a_weap->templateWeapon;
+		size_t previousMaxMatch = 0;
+		bool hasExclusiveMatch = false;
+		bool hasExclusiveWeaponMatch = false;
+		bool foundExclusiveMatch = false;
+
 		for (auto& swapEntry : this->storedSwaps) {
+			bool isSwapExclusive = swapEntry.exclusive;
+			size_t matchingDegree = 0;
+			if (!isSwapExclusive && hasExclusiveMatch) continue;
+
 			size_t matches = swapEntry.requiredEnchantmentKeywords.size();
+			matchingDegree += matches;
+
 			for (auto& requiredEnchantmentKeyword : swapEntry.requiredEnchantmentKeywords) {
 				for (auto* effect : a_enchantment->effects) {
 					if (effect->baseEffect->HasKeywordString(requiredEnchantmentKeyword)) {
@@ -189,15 +208,34 @@ namespace Cache {
 			if (!swapEntry.requiredWeapons.empty()) {
 				for (auto& validWeapon : swapEntry.requiredWeapons) {
 					if (validWeapon == a_weap) {
+						if (!hasExclusiveWeaponMatch && isSwapExclusive) {
+							previousMaxMatch = 0;
+							hasExclusiveWeaponMatch = true;
+						}
+
+						if (isSwapExclusive && matchingDegree > previousMaxMatch) {
+							exclusiveResponse = swapEntry;
+							foundExclusiveMatch = true;
+						}
 						response.push_back(swapEntry);
 					}
 					else if (templateWeapon && validWeapon == templateWeapon) {
+						if (!hasExclusiveWeaponMatch && isSwapExclusive) {
+							previousMaxMatch = 0;
+							hasExclusiveWeaponMatch = true;
+						}
+
+						if (isSwapExclusive && matchingDegree > previousMaxMatch) {
+							exclusiveResponse = swapEntry;
+							foundExclusiveMatch = true;
+						}
 						response.push_back(swapEntry);
 					}
 				}
 			}
 			else {
 				if (!swapEntry.excludedWeapons.empty()) {
+					matchingDegree += swapEntry.excludedWeapons.size();
 					bool isExcludedWeapon = false;
 					for (auto& badWeapon : swapEntry.excludedWeapons) {
 						if (a_weap == badWeapon) {
@@ -212,6 +250,7 @@ namespace Cache {
 				}
 
 				if (!swapEntry.excludedWeaponKeywords.empty()) {
+					matchingDegree += swapEntry.excludedWeaponKeywords.size();
 					bool hasBadKeyword = false;
 					for (auto& keyword : swapEntry.excludedWeaponKeywords) {
 						if (a_weap->HasKeywordString(keyword))
@@ -221,31 +260,43 @@ namespace Cache {
 				}
 
 				bool hasAllKeywords = true;
+				matchingDegree += swapEntry.requiredWeaponKeywords.size();
 				for (auto& requiredKeyword : swapEntry.requiredWeaponKeywords) {
 					if (!a_weap->HasKeywordString(requiredKeyword))
 						hasAllKeywords = false;
 				}
 				if (!hasAllKeywords) continue;
+				if (isSwapExclusive && matchingDegree > previousMaxMatch) {
+					foundExclusiveMatch = true;
+					exclusiveResponse = swapEntry;
+				}
 				response.push_back(swapEntry);
 			}
 		}
 
+		if (foundExclusiveMatch) {
+			return swapDataVector({ exclusiveResponse });
+		}
 		return response;
 	}
 
 	bool StoredData::RegisterReadyWeapons() {
 		auto start = std::chrono::steady_clock::now();
-		auto weaponArray = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectWEAP>();
+		auto& weaponArray = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::TESObjectWEAP>();
 
-		for (auto weapon : weaponArray) {
+		for (auto* weapon : weaponArray) {
 			SwapData matchingSwap = SwapData();
 			RE::EnchantmentItem* weaponEnchant = weapon->formEnchanting;
 			if (!weaponEnchant) continue;
 			if (weaponEnchant->effects.empty()) continue;
 
 			auto foundSwaps = this->GetMatchingSwaps(weapon, weaponEnchant);
-			if (!foundSwaps.empty())
+			if (!foundSwaps.empty()) {
 				this->weaponCache[weapon] = foundSwaps;
+			}
+			else {
+				this->invalidWeapons[weapon] = true;
+			}
 		}
 
 		auto end = std::chrono::steady_clock::now();
@@ -324,8 +375,11 @@ namespace Cache {
 				_loggerInfo("            {}", garbage);
 			}
 
+			if (!error.expectedBool.empty())
+				_loggerInfo("        >Found {} non-bool fields.", error.expectedBool.size());
+
 			if (!error.expectedString.empty())
-				_loggerInfo("        >Found {} non-string fields.", error.expectedList.size());
+				_loggerInfo("        >Found {} non-string fields.", error.expectedString.size());
 
 			if (!error.expectedList.empty())
 				_loggerInfo("        >Found {} non-array fields.", error.expectedList.size());

@@ -8,6 +8,7 @@ namespace Settings {
 		std::string  configName;
 		stringVector missingRequiredFields;
 		stringVector foundGarbage;
+		stringVector expectedBool;
 		stringVector expectedString;
 		stringVector expectedObject;
 		stringVector expectedList;

@@ -25,6 +25,8 @@ namespace {
 		std::vector<RE::SpellItem*> abilities = std::vector<RE::SpellItem*>();
 		if (rightWeapon) {
 			auto* enchantment = rightWeapon->formEnchanting;
+			if (!enchantment) enchantment = rightData->GetEnchantment();
+
 			auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(rightWeapon, enchantment);
 			for (auto& swap : swaps) {
 				auto* rightAbility = swap.rightAbility;
@@ -35,6 +37,8 @@ namespace {
 
 		if (leftWeapon) {
 			auto* enchantment = leftWeapon->formEnchanting;
+			if (!enchantment) enchantment = rightData->GetEnchantment();
+
 			auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(leftWeapon, enchantment);
 			for (auto& swap : swaps) {
 				auto* leftAbility = swap.leftAbility;

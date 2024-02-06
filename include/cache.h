@@ -25,6 +25,7 @@ namespace Cache {
 		RE::SpellItem* rightAbility;
 		std::string    artSource;
 		std::string    name;
+		bool           exclusive;
 		stringVector   requiredEnchantmentKeywords;
 		stringVector   requiredWeaponKeywords;
 		stringVector   excludedWeaponKeywords;
@@ -46,6 +47,7 @@ namespace Cache {
 		spellVector    storedAbilities;
 		swapDataVector storedSwaps;
 		abilityCache   weaponCache;
+		std::unordered_map<RE::TESObjectWEAP*, bool> invalidWeapons;
 
 		/**
 		* Registers pre-enchanted weapons to speed up the framework.
