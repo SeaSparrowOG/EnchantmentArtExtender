@@ -48,12 +48,13 @@ namespace {
 		}
 
 		for (auto* spell : abilities) {
-			a_actor->AddSpell(spell);
+			if (!a_actor->HasSpell(spell))
+				a_actor->AddSpell(spell);
 		}
 
 		std::vector<RE::SpellItem*> allAbilities = Cache::StoredData::GetSingleton()->GetAllAbilities();
 		for (auto* spell : allAbilities) {
-			if (!SpellVectorContainsElement(spell, &abilities))
+			if (!SpellVectorContainsElement(spell, &abilities) && a_actor->HasSpell(spell))
 				a_actor->RemoveSpell(spell);
 		}
 	}
@@ -148,7 +149,7 @@ namespace ActorEvents {
 		RE::FormID eventID = a_event->formID;
 		auto eventForm = eventID ? RE::TESForm::LookupByID(eventID) : nullptr;
 		auto eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
-		if (!eventActor) return RE::BSEventNotifyControl::kContinue;
+		if (!eventActor) return continueEvent;
 		
 		EvaluateActor(eventActor);
 		return continueEvent;
