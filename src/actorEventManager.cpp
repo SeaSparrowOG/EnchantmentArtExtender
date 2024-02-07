@@ -9,7 +9,7 @@ namespace {
 		return false;
 	}
 
-	void EvaluateActor(RE::Actor* a_actor) {
+	void EvaluateActor(RE::Actor* a_actor, bool a_drawing = false, bool a_sheathing = false) {
 		if (!a_actor) return;
 
 		auto* rightData = a_actor->GetEquippedEntryData(false);
@@ -23,7 +23,13 @@ namespace {
 		auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
 
 		std::vector<RE::SpellItem*> abilities = std::vector<RE::SpellItem*>();
-		if (rightWeapon) {
+		bool handsUp = (a_actor->IsWeaponDrawn() || a_drawing) && !a_sheathing;
+
+		if ((leftWeapon || rightWeapon)) {
+			a_actor->AddAnimationGraphEventSink(ActorEvents::SheathEvent::GetSingleton());
+		}
+
+		if (handsUp && rightWeapon) {
 			auto* enchantment = rightWeapon->formEnchanting;
 			if (!enchantment) enchantment = rightData->GetEnchantment();
 
@@ -35,7 +41,7 @@ namespace {
 			}
 		}
 
-		if (leftWeapon) {
+		if (handsUp && leftWeapon) {
 			auto* enchantment = leftWeapon->formEnchanting;
 			if (!enchantment) enchantment = rightData->GetEnchantment();
 
@@ -173,6 +179,25 @@ namespace ActorEvents {
 		auto* eventActor = eventActorRefr ? eventActorRefr->As<RE::Actor>() : nullptr;
 
 		EvaluateActor(eventActor);
+		return continueEvent;
+	}
+
+	RE::BSEventNotifyControl SheathEvent::ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) {
+		if (!(a_event && a_eventSource)) return continueEvent;
+		auto tag = a_event->tag;
+
+		if (tag == "BeginWeaponSheathe") {
+			auto eventFormID = a_event->holder->formID;
+			auto* eventForm = RE::TESForm::LookupByID(eventFormID);
+			auto* eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
+			EvaluateActor(eventActor, false, true);
+		}
+		else if (tag == "BeginWeaponDraw") {
+			auto eventFormID = a_event->holder->formID;
+			auto* eventForm = RE::TESForm::LookupByID(eventFormID);
+			auto* eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
+			EvaluateActor(eventActor, true, false);
+		}
 		return continueEvent;
 	}
 }

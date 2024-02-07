@@ -47,4 +47,10 @@ namespace ActorEvents {
 
 		bool registered;
 	};
+
+	class SheathEvent : public clib_util::singleton::ISingleton<SheathEvent>,
+		public RE::BSTEventSink<RE::BSAnimationGraphEvent> {
+	private:
+		RE::BSEventNotifyControl ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) override;
+	};
 }
