@@ -25,7 +25,7 @@ namespace {
 		std::vector<RE::SpellItem*> abilities = std::vector<RE::SpellItem*>();
 		bool handsUp = (a_actor->IsWeaponDrawn() || a_drawing) && !a_sheathing;
 
-		if ((leftWeapon || rightWeapon)) {
+		if (leftWeapon || rightWeapon) {
 			a_actor->AddAnimationGraphEventSink(ActorEvents::SheathEvent::GetSingleton());
 		}
 
@@ -186,18 +186,19 @@ namespace ActorEvents {
 		if (!(a_event && a_eventSource)) return continueEvent;
 		auto tag = a_event->tag;
 
-		if (tag == "BeginWeaponSheathe") {
-			auto eventFormID = a_event->holder->formID;
-			auto* eventForm = RE::TESForm::LookupByID(eventFormID);
-			auto* eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
-			EvaluateActor(eventActor, false, true);
-		}
-		else if (tag == "BeginWeaponDraw") {
+		if (tag == "weaponDraw") {
 			auto eventFormID = a_event->holder->formID;
 			auto* eventForm = RE::TESForm::LookupByID(eventFormID);
 			auto* eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
 			EvaluateActor(eventActor, true, false);
 		}
+		else if (tag == "weaponSheathe") {
+			auto eventFormID = a_event->holder->formID;
+			auto* eventForm = RE::TESForm::LookupByID(eventFormID);
+			auto* eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
+			EvaluateActor(eventActor, true, true);
+		}
+
 		return continueEvent;
 	}
 }
