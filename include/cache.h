@@ -2,7 +2,7 @@
 
 namespace Cache {
 //I might edit this in the future to be just in Data
-#define configPath R"(Data/SKSE/Plugins/Enchantment Arts Extender/)"
+#define configPath R"(Data/Enchantment Art Extender/)"
 
 //The following are just here for some legibility.
 #define swapDataVector std::vector<SwapData>

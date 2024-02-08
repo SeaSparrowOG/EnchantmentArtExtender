@@ -404,6 +404,7 @@ namespace Cache {
 		RegisterSwaps(validConfigs);
 		_loggerInfo("Applied {} patches.", this->storedSwaps.size());
 		_loggerInfo("The following patches were applied:");
+		this->DebugSwaps();
 		_loggerInfo("==============================================");
 		this->RegisterReadyWeapons();
 		return true;
