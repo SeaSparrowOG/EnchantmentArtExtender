@@ -26,7 +26,7 @@ namespace {
 		bool handsUp = (a_actor->IsWeaponDrawn() || a_drawing) && !a_sheathing;
 
 		if (leftWeapon || rightWeapon) {
-			a_actor->AddAnimationGraphEventSink(ActorEvents::SheathEvent::GetSingleton());
+			ActorEvents::AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
 		}
 
 		if (handsUp && rightWeapon) {
@@ -112,6 +112,13 @@ namespace ActorEvents {
 		return true;
 	}
 
+	void AnimationEventListener::RegisterActor(RE::Actor* a_actor) {
+		if (!a_actor) return;
+		if (this->managedActors.contains(a_actor)) return;
+		this->managedActors[a_actor] = true;
+		a_actor->AddAnimationGraphEventSink(this);
+	}
+
 	/*
 	* =======================================
 	* De-Register handlers for the listeners.
@@ -140,6 +147,13 @@ namespace ActorEvents {
 		eventHolder->RemoveEventSink(this);
 		return;
 	}
+
+	void AnimationEventListener::UnRegisterActor(RE::Actor* a_actor) {
+		if (!a_actor) return;
+		if (!this->managedActors.contains(a_actor)) return;
+		a_actor->RemoveAnimationGraphEventSink(this);
+		this->managedActors.erase(a_actor);
+	}
 }
 
 namespace ActorEvents {
@@ -150,14 +164,18 @@ namespace ActorEvents {
 	*/
 	RE::BSEventNotifyControl LoadEvent::ProcessEvent(const RE::TESObjectLoadedEvent* a_event, RE::BSTEventSource<RE::TESObjectLoadedEvent>* a_eventSource) {
 		if (!(a_event && a_eventSource)) return continueEvent;
-		if (!a_event->loaded) return continueEvent;
 
 		RE::FormID eventID = a_event->formID;
 		auto eventForm = eventID ? RE::TESForm::LookupByID(eventID) : nullptr;
 		auto eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
 		if (!eventActor) return continueEvent;
 		
-		EvaluateActor(eventActor);
+		if (a_event->loaded) {
+			EvaluateActor(eventActor);
+		}
+		else {
+			AnimationEventListener::GetSingleton()->UnRegisterActor(eventActor);
+		}
 		return continueEvent;
 	}
 
@@ -179,10 +197,11 @@ namespace ActorEvents {
 		auto* eventActor = eventActorRefr ? eventActorRefr->As<RE::Actor>() : nullptr;
 
 		EvaluateActor(eventActor);
+		AnimationEventListener::GetSingleton()->UnRegisterActor(eventActor);
 		return continueEvent;
 	}
 
-	RE::BSEventNotifyControl SheathEvent::ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) {
+	RE::BSEventNotifyControl AnimationEventListener::ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) {
 		if (!(a_event && a_eventSource)) return continueEvent;
 		auto tag = a_event->tag;
 

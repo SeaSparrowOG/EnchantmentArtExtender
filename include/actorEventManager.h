@@ -48,9 +48,14 @@ namespace ActorEvents {
 		bool registered;
 	};
 
-	class SheathEvent : public clib_util::singleton::ISingleton<SheathEvent>,
+	class AnimationEventListener : public clib_util::singleton::ISingleton<AnimationEventListener>,
 		public RE::BSTEventSink<RE::BSAnimationGraphEvent> {
+	public:
+		void RegisterActor(RE::Actor* a_actor);
+		void UnRegisterActor(RE::Actor* a_actor);
 	private:
 		RE::BSEventNotifyControl ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) override;
+
+		std::unordered_map<RE::Actor*, bool> managedActors;
 	};
 }
