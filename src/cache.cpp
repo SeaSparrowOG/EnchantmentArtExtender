@@ -195,14 +195,21 @@ namespace Cache {
 			size_t matches = swapEntry.requiredEnchantmentKeywords.size();
 			matchingDegree += matches;
 
+			std::vector<std::string> matchAgainst = swapEntry.requiredEnchantmentKeywords;
 			for (auto& requiredEnchantmentKeyword : swapEntry.requiredEnchantmentKeywords) {
 				for (auto* effect : a_enchantment->effects) {
 					if (effect->baseEffect->HasKeywordString(requiredEnchantmentKeyword)) {
-						--matches;
+						for (auto it = matchAgainst.begin(); it != matchAgainst.end(); ++it) {
+							if (requiredEnchantmentKeyword == *it) {
+								matchAgainst.erase(it);
+								break;
+							}
+						}
 					}
 				}
 			}
-			if (matches > 0)
+
+			if (!matchAgainst.empty())
 				continue;
 
 			if (!swapEntry.requiredWeapons.empty()) {
