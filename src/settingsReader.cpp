@@ -54,7 +54,7 @@ namespace Settings {
 		ErrorReport response = ErrorReport(config);
 		const char* expectedInformationNames[] = { "Left", "Right" };
 		const char* expectedInformationAtLeastOne[] = { "RequiredWeapons", "WeaponKeywords" };
-		const char* otherValidFields[] = { "ExcludedWeapons", "ExcludedWeaponKeywords", "Exclusive" };
+		const char* otherValidFields[] = { "ExcludedWeapons", "ExcludedWeaponKeywords", "Exclusive", "$schema" };
 		const char** allAllowedFields[] = { expectedInformationNames, expectedInformationAtLeastOne, otherValidFields };
 
 		//Empty, un-openable configs are reported in the original reader.
@@ -82,7 +82,7 @@ namespace Settings {
 		}
 
 		//Check 3: Check for garbage.
-		std::string expectedFields[] = { "MinimumVersion", "EnchantmentKeywords", "ArtSource", "SwapData", "Exclusive" };
+		std::string expectedFields[] = { "MinimumVersion", "EnchantmentKeywords", "ArtSource", "SwapData", "Exclusive", "$schema" };
 		auto allFields = a_JSON.getMemberNames();
 		for (auto field : allFields) {
 			bool fieldIsValid = false;

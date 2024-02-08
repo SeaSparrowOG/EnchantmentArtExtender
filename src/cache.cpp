@@ -301,7 +301,10 @@ namespace Cache {
 			SwapData matchingSwap = SwapData();
 			RE::EnchantmentItem* weaponEnchant = weapon->formEnchanting;
 			if (!weaponEnchant) continue;
-			if (weaponEnchant->effects.empty()) continue;
+			if (weaponEnchant->effects.empty()) {
+				this->invalidWeapons[weapon] = true;
+				continue;
+			}
 
 			auto foundSwaps = this->GetMatchingSwaps(weapon, weaponEnchant);
 			if (!foundSwaps.empty()) {
@@ -314,7 +317,7 @@ namespace Cache {
 
 		auto end = std::chrono::steady_clock::now();
 		auto execTime = end - start;
-		_loggerInfo("Finished generating the weapon cache in {}ms. Created {} entries.", std::chrono::duration<double, std::milli>(execTime).count(), weaponCache.size());
+		_loggerInfo("Finished generating the weapon cache in {}ms.", std::chrono::duration<double, std::milli>(execTime).count(), weaponCache.size());
 		return true;
 	}
 
@@ -410,10 +413,9 @@ namespace Cache {
 		//Apply the settings:
 		RegisterSwaps(validConfigs);
 		_loggerInfo("Applied {} patches.", this->storedSwaps.size());
-		_loggerInfo("The following patches were applied:");
-		this->DebugSwaps();
 		_loggerInfo("==============================================");
 		this->RegisterReadyWeapons();
+		_loggerInfo("Found {} enchanted weapon, {} of which will have new effects.", this->weaponCache.size() + this->invalidWeapons.size(), this->weaponCache.size());
 		return true;
 	}
 }
