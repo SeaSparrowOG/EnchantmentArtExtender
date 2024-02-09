@@ -30,8 +30,11 @@ set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE 
 set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
 set(Boost_USE_STATIC_RUNTIME OFF CACHE BOOL "")
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "")
-add_compile_definitions(SKYRIM_AE)
-add_compile_definitions(SKYRIM_SUPPORT_AE)
+
+if (BUILD_SKYRIM_AE)
+	add_compile_definitions(SKYRIM_AE)
+	add_compile_definitions(SKYRIM_SUPPORT_AE)
+endif()
 
 # ---- Project ----
 

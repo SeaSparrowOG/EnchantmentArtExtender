@@ -37,6 +37,11 @@
       "toolset": "v143"
     },
     {
+      "name": "se",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build-15"
+    },
+    {
       "name": "ae",
       "hidden": true,
       "binaryDir": "${sourceDir}/build",
@@ -44,6 +49,16 @@
         "BUILD_SKYRIMAE": true,
         "SUPPORT_LATEST": true
       }
+    },
+    {
+      "name": "vs2022-windows-vcpkg-se",
+      "inherits": [
+        "cmake-dev",
+        "vcpkg",
+        "windows",
+        "vs2022",
+        "se"
+      ]
     },
     {
       "name": "vs2022-windows-vcpkg-ae",
@@ -60,6 +75,11 @@
     {
       "name": "Release",
       "configurePreset": "vs2022-windows-vcpkg-ae",
+      "configuration": "Release"
+    },
+    {
+      "name": "Release - Outdated",
+      "configurePreset": "vs2022-windows-vcpkg-se",
       "configuration": "Release"
     }
   ]
