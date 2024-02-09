@@ -2,24 +2,16 @@
 
 namespace PrivateFunctions {
 	bool ShouldRebuildINI(CSimpleIniA* a_ini) {
-		const char* sections[] = {
-			"General" };
 		const char* generalKeys[] = {
 			"bSuppressOriginalShader",
 			"bShouldAddLight" };
 
-		const char** keys[] = { generalKeys };
-		int sectionLength = sizeof(sections) / sizeof(*sections);
+		std::list<CSimpleIniA::Entry> keyHolder;
+		a_ini->GetAllKeys("General", keyHolder);
+		if (std::size(generalKeys) != keyHolder.size()) return true;
 
-		for (int i = 0; i < sectionLength; ++i) {
-			std::list<CSimpleIniA::Entry> keyHolder;
-			a_ini->GetAllKeys(sections[i], keyHolder);
-			if (std::size(keyHolder) != keyHolder.size()) return true;
-
-			for (int j = 0; j < sizeof(keys[i]) / sizeof(**keys[i]); ++j) {
-				_loggerInfo("Checking {}", keys[i][j]);
-				if (!a_ini->KeyExists(sections[i], keys[i][j])) return true;
-			}
+		for (auto* key : generalKeys) {
+			if (!a_ini->KeyExists("General", key)) return true;
 		}
 		return false;
 	}
