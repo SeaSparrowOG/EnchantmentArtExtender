@@ -6,7 +6,7 @@ namespace PrivateFunctions {
 			"General" };
 		const char* generalKeys[] = {
 			"bSuppressOriginalShader",
-			"bSuppressLights" };
+			"bShouldAddLight" };
 
 		const char** keys[] = { generalKeys };
 		int sectionLength = sizeof(sections) / sizeof(*sections);
@@ -16,7 +16,8 @@ namespace PrivateFunctions {
 			a_ini->GetAllKeys(sections[i], keyHolder);
 			if (std::size(keyHolder) != keyHolder.size()) return true;
 
-			for (int j = 0; j < sizeof(keys[i]) / sizeof(*keys[i]); ++j) {
+			for (int j = 0; j < sizeof(keys[i]) / sizeof(**keys[i]); ++j) {
+				_loggerInfo("Checking {}", keys[i][j]);
 				if (!a_ini->KeyExists(sections[i], keys[i][j])) return true;
 			}
 		}
@@ -26,7 +27,7 @@ namespace PrivateFunctions {
 
 namespace Settings {
 	bool BuildIni() {
-		std::filesystem::path f{ "./Data/SKSE/Plugins/EnchantmentEffectsExtender.ini" };
+		std::filesystem::path f{ "Data/SKSE/Plugins/EnchantmentArtExtender.ini" };
 		bool createEntries = false;
 		if (!std::filesystem::exists(f)) {
 			std::fstream createdINI;
@@ -43,7 +44,7 @@ namespace Settings {
 		if (createEntries) {
 			ini.Delete("General", NULL);
 			ini.SetBoolValue("General", "bSuppressOriginalShader", true, ";Disables the original shader of the enchantment. Recommended: false");
-			ini.SetBoolValue("General", "bSuppressLights", true, ";Disables the light effect in a given art. Recommended: true");
+			ini.SetBoolValue("General", "bShouldAddLight", true, ";Mixes the light of the given enchantments (provided they have light). Recommended: true");
 			ini.SaveFile(f.c_str());
 		}
 
