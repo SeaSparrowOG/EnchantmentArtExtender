@@ -43,7 +43,7 @@ namespace {
 
 		if (handsUp && leftWeapon) {
 			auto* enchantment = leftWeapon->formEnchanting;
-			if (!enchantment) enchantment = rightData->GetEnchantment();
+			if (!enchantment) enchantment = leftData->GetEnchantment();
 
 			auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(leftWeapon, enchantment);
 			for (auto& swap : swaps) {
