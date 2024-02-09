@@ -44,6 +44,8 @@ namespace Cache {
 		spellVector    GetAllAbilities();
 
 	private:
+		bool           shouldDisableShaders;
+		bool           shouldDisableLights;
 		spellVector    storedAbilities;
 		swapDataVector storedSwaps;
 		abilityCache   weaponCache;
@@ -60,6 +62,12 @@ namespace Cache {
 		* @param a_validConfigs The vector of the configs.
 		*/
 		void RegisterSwaps(std::vector<Json::Value> a_validConfigs);
+
+		/**
+		* Applies the settings found in the INI file.
+		* @return True if the operation succeeds, false otherwise.
+		*/
+		bool ApplyINISettings();
 
 		/**
 		* Prints all stored swaps. Allows for easier debugging.

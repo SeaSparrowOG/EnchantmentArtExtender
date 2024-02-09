@@ -80,6 +80,17 @@ namespace {
 			_loggerInfo("            >{}", clib_util::editorID::get_editorID(weapon));
 		_loggerInfo("==============================================");
 	}
+
+	bool DisableEnchantmentShader() {
+		auto& enchantmentArray = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::EnchantmentItem>();
+
+		for (auto* enchantment : enchantmentArray) {
+			for (auto effect : enchantment->effects) {
+				effect->baseEffect->data.enchantShader = nullptr;
+			}
+		}
+		return true;
+	}
 }
 
 namespace Cache {
@@ -323,6 +334,8 @@ namespace Cache {
 
 	bool Cache::StoredData::InitiateCache() {
 		Settings::BuildIni();
+		ApplyINISettings();
+
 		std::vector<std::string> configFiles = std::vector<std::string>();
 		std::vector<Json::Value> validConfigs = std::vector<Json::Value>();
 		std::vector<Settings::ErrorReport> caughtErrors = std::vector<Settings::ErrorReport>();
@@ -417,5 +430,16 @@ namespace Cache {
 		this->RegisterReadyWeapons();
 		_loggerInfo("Found {} enchanted weapon, {} of which will have new effects.", this->weaponCache.size() + this->invalidWeapons.size(), this->weaponCache.size());
 		return true;
+	}
+
+	bool Cache::StoredData::ApplyINISettings() {
+		std::filesystem::path f{ "./Data/SKSE/Plugins/EnchantmentEffectsExtender.ini" };
+		CSimpleIniA ini;
+		ini.SetUnicode();
+		ini.LoadFile(f.c_str());
+
+		if (ini.GetBoolValue("General", "bSuppressOriginalShader", true)) {
+			DisableEnchantmentShader();
+		}
 	}
 }

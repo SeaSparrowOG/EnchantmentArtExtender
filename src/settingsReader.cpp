@@ -6,7 +6,7 @@ namespace PrivateFunctions {
 			"General" };
 		const char* generalKeys[] = {
 			"bSuppressOriginalShader",
-			"bAddLight" };
+			"bSuppressLights" };
 
 		const char** keys[] = { generalKeys };
 		int sectionLength = sizeof(sections) / sizeof(*sections);
@@ -43,7 +43,7 @@ namespace Settings {
 		if (createEntries) {
 			ini.Delete("General", NULL);
 			ini.SetBoolValue("General", "bSuppressOriginalShader", true, ";Disables the original shader of the enchantment. Recommended: false");
-			ini.SetBoolValue("General", "bAddLight", true, ";Adds a small light zone to effects. Recommended: true");
+			ini.SetBoolValue("General", "bSuppressLights", true, ";Disables the light effect in a given art. Recommended: true");
 			ini.SaveFile(f.c_str());
 		}
 
