@@ -429,6 +429,8 @@ namespace Cache {
 		_loggerInfo("==============================================");
 		this->RegisterReadyWeapons();
 		_loggerInfo("Found {} enchanted weapon, {} of which will have new effects.", this->weaponCache.size() + this->invalidWeapons.size(), this->weaponCache.size());
+		this->lightObject = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESObjectLIGH>(StringToFormID("0x800"), "EnchantmentArtExtender.esl");
+		this->lightSpell = RE::TESDataHandler::GetSingleton()->LookupForm<RE::SpellItem>(StringToFormID("0x802"), "EnchantmentArtExtender.esl");
 		return true;
 	}
 
@@ -441,5 +443,9 @@ namespace Cache {
 		if (ini.GetBoolValue("General", "bSuppressOriginalShader", true)) {
 			DisableEnchantmentShader();
 		}
+
+		this->shouldAddLights = ini.GetBoolValue("General", "bShouldAddLight", true);
 	}
+
+	bool Cache::StoredData::GetShouldAddLight() { return this->shouldAddLights; }
 }

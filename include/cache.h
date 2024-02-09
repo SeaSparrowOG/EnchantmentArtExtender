@@ -40,15 +40,18 @@ namespace Cache {
 	class StoredData : public clib_util::singleton::ISingleton<StoredData> {
 	public:
 		bool           InitiateCache();
+		bool           GetShouldAddLight();
 		swapDataVector GetMatchingSwaps(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment);
 		spellVector    GetAllAbilities();
 
+		RE::TESObjectLIGH* lightObject;
+		RE::SpellItem*     lightSpell;
 	private:
-		bool           shouldDisableShaders;
-		bool           shouldDisableLights;
-		spellVector    storedAbilities;
-		swapDataVector storedSwaps;
-		abilityCache   weaponCache;
+		bool               shouldDisableShaders;
+		bool               shouldAddLights;
+		spellVector        storedAbilities;
+		swapDataVector     storedSwaps;
+		abilityCache       weaponCache;
 		std::unordered_map<RE::TESObjectWEAP*, bool> invalidWeapons;
 
 		/**
