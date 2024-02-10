@@ -91,17 +91,17 @@ namespace {
 				}
 			}
 		}
-		
-		for (auto* spell : abilities) {
-			if (!a_actor->HasSpell(spell)) {
-				a_actor->AddSpell(spell);
-			}
-		}
 
 		std::vector<RE::SpellItem*> allAbilities = Cache::StoredData::GetSingleton()->GetAllAbilities();
 		for (auto* spell : allAbilities) {
-			if (a_actor->HasSpell(spell) && !SpellVectorContainsElement(spell, &abilities)) {
+			if (a_actor->HasSpell(spell)) {
 				a_actor->RemoveSpell(spell);
+			}
+		}
+
+		for (auto* spell : abilities) {
+			if (!a_actor->HasSpell(spell)) {
+				a_actor->AddSpell(spell);
 			}
 		}
 
@@ -114,7 +114,6 @@ namespace {
 			magicLight->data.color.blue = blue;
 			a_actor->AddSpell(magicSpell);
 		}
-		_loggerInfo("    >Finished evaluation");
 	}
 }
 
@@ -261,9 +260,6 @@ namespace ActorEvents {
 		else if (eventActor && tag == "weaponSheathe") {
 			ActorRegistry::GetSingleton()->ProcessAnimationEvent(eventActor, false);
 		}
-		else if (eventActor && tag == "Unequip_Out") {
-			ActorRegistry::GetSingleton()->ProcessAnimationEvent(eventActor, false);
-		}
 
 		return continueEvent;
 	}
@@ -300,25 +296,18 @@ namespace ActorEvents {
 				return;
 			}
 
-			_loggerInfo("Managed actor equip call.");
 			//Unchanged data.
 			if (actorData->first.first == leftWeapon && actorData->first.second == rightWeapon) {
-				_loggerInfo("    >Discarding actor equip call.");
 				return;
 			}
 
-			//Potential avoiding a crash:
+			//Avoiding a crash:
 			if (actorData->second && rightWeapon && actorData->first.second != rightWeapon) {
-				_loggerInfo("    >Discarding actor equip call (potential crash)");
 				this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
 					(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
-						true);
+						false);
 				return;
 			}
-
-			_loggerInfo("    >Processing actor equip call:");
-			if (leftWeapon) _loggerInfo("        >{}", clib_util::editorID::get_editorID(leftWeapon));
-			if (rightWeapon) _loggerInfo("        >{}", clib_util::editorID::get_editorID(rightWeapon));
 
 			actorData->first.first = leftWeapon;
 			actorData->first.second = rightWeapon;
@@ -353,7 +342,6 @@ namespace ActorEvents {
 	void ActorEvents::ActorRegistry::ProcessAnimationEvent(RE::Actor* a_actor, bool a_drawing) {
 		if (!a_actor || !this->managedActors.contains(a_actor)) return;
 
-		auto* actorData = &this->managedActors[a_actor];
 		auto* rightData = a_actor->GetEquippedEntryData(false);
 		bool rightEnchanted = rightData ? rightData->IsEnchanted() : false;
 		auto* rightBound = rightEnchanted ? rightData->object : nullptr;
@@ -367,13 +355,6 @@ namespace ActorEvents {
 		if (!(leftWeapon || rightWeapon)) {
 			AnimationEventListener::GetSingleton()->UnRegisterActor(a_actor);
 			this->managedActors.erase(a_actor);
-			return;
-		}
-
-		_loggerInfo("Evaluating {} (Managed Actor) Animation Call -> Drawn: {}", a_actor->GetName(), a_drawing);
-
-		if (actorData->second == a_drawing) {
-			_loggerInfo("    >Discarding animation call", actorData->second, a_drawing);
 			return;
 		}
 
