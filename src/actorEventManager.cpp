@@ -261,6 +261,9 @@ namespace ActorEvents {
 		else if (eventActor && tag == "weaponSheathe") {
 			ActorRegistry::GetSingleton()->ProcessAnimationEvent(eventActor, false);
 		}
+		else if (eventActor && tag == "Unequip_Out") {
+			ActorRegistry::GetSingleton()->ProcessAnimationEvent(eventActor, false);
+		}
 
 		return continueEvent;
 	}
@@ -301,6 +304,15 @@ namespace ActorEvents {
 			//Unchanged data.
 			if (actorData->first.first == leftWeapon && actorData->first.second == rightWeapon) {
 				_loggerInfo("    >Discarding actor equip call.");
+				return;
+			}
+
+			//Potential avoiding a crash:
+			if (actorData->second && rightWeapon && actorData->first.second != rightWeapon) {
+				_loggerInfo("    >Discarding actor equip call (potential crash)");
+				this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
+					(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
+						true);
 				return;
 			}
 
@@ -360,15 +372,8 @@ namespace ActorEvents {
 
 		_loggerInfo("Evaluating {} (Managed Actor) Animation Call -> Drawn: {}", a_actor->GetName(), a_drawing);
 
-		if (actorData->first.first == leftWeapon
-			&& actorData->first.second == rightWeapon
-			&& actorData->second == a_drawing) {
-			_loggerInfo("    >Discarding animation call");
-			return;
-		}
-
-		if (!a_drawing && actorData->first.first == leftWeapon
-			&& actorData->first.second == rightWeapon) {
+		if (actorData->second == a_drawing) {
+			_loggerInfo("    >Discarding animation call", actorData->second, a_drawing);
 			return;
 		}
 
@@ -376,9 +381,6 @@ namespace ActorEvents {
 		this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
 			(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
 				a_drawing);
-
-		if (leftWeapon) _loggerInfo("    >{}", clib_util::editorID::get_editorID(leftWeapon));
-		if (rightWeapon) _loggerInfo("    >{}", clib_util::editorID::get_editorID(rightWeapon));
 		EvaluateActor(a_actor, leftWeapon, rightWeapon, a_drawing);
 	}
 
