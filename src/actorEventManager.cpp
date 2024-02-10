@@ -9,25 +9,10 @@ namespace {
 		return false;
 	}
 
-	void EvaluateActor(RE::Actor* a_actor, bool a_drawing = false, bool a_sheathing = false) {
+	void EvaluateActor(RE::Actor* a_actor, RE::TESObjectWEAP* a_leftWeapon, RE::TESObjectWEAP* a_rightWeapon, bool a_bDrawn) {
 		if (!a_actor) return;
 
-		auto* rightData = a_actor->GetEquippedEntryData(false);
-		bool rightEnchanted = rightData ? rightData->IsEnchanted() : false;
-		auto* rightBound = rightEnchanted ? rightData->object : nullptr;
-		auto* rightWeapon = rightBound ? rightBound->As<RE::TESObjectWEAP>() : nullptr;
-
-		auto* leftData = a_actor->GetEquippedEntryData(true);
-		bool leftEnchanted = leftData ? leftData->IsEnchanted() : false;
-		auto* leftBound = leftEnchanted ? leftData->object : nullptr;
-		auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
-
 		std::vector<RE::SpellItem*> abilities = std::vector<RE::SpellItem*>();
-		bool handsUp = (a_actor->IsWeaponDrawn() || a_drawing) && !a_sheathing;
-
-		if (leftWeapon || rightWeapon) {
-			ActorEvents::AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
-		}
 
 		auto* magicLight = Cache::StoredData::GetSingleton()->lightObject;
 		auto* magicSpell = Cache::StoredData::GetSingleton()->lightSpell;
@@ -35,11 +20,11 @@ namespace {
 		float green = magicLight ? magicLight->emittanceColor.green : 255.0f;
 		float blue = magicLight ? magicLight->emittanceColor.blue : 255.0f;
 
-		if (handsUp && rightWeapon) {
-			auto* enchantment = rightWeapon->formEnchanting;
-			if (!enchantment) enchantment = rightData->GetEnchantment();
+		if (a_bDrawn && a_rightWeapon) {
+			auto* enchantment = a_rightWeapon->formEnchanting;
+			if (!enchantment) enchantment = a_actor->GetEquippedEntryData(false)->GetEnchantment();
 
-			auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(rightWeapon, enchantment);
+			auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(a_rightWeapon, enchantment);
 			for (auto& swap : swaps) {
 				auto* spell = swap.rightAbility;
 				if (!SpellVectorContainsElement(spell, &abilities)) {
@@ -71,11 +56,11 @@ namespace {
 			}
 		}
 
-		if (handsUp && leftWeapon) {
-			auto* enchantment = leftWeapon->formEnchanting;
-			if (!enchantment) enchantment = leftData->GetEnchantment();
+		if (a_bDrawn && a_leftWeapon) {
+			auto* enchantment = a_leftWeapon->formEnchanting;
+			if (!enchantment) enchantment = a_actor->GetEquippedEntryData(true)->GetEnchantment();
 
-			auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(leftWeapon, enchantment);
+			auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(a_leftWeapon, enchantment);
 			for (auto& swap : swaps) {
 				auto* spell = swap.leftAbility;
 				if (!SpellVectorContainsElement(spell, &abilities)) {
@@ -106,27 +91,30 @@ namespace {
 				}
 			}
 		}
-
+		
 		for (auto* spell : abilities) {
-			if (!a_actor->HasSpell(spell))
+			if (!a_actor->HasSpell(spell)) {
 				a_actor->AddSpell(spell);
+			}
 		}
 
 		std::vector<RE::SpellItem*> allAbilities = Cache::StoredData::GetSingleton()->GetAllAbilities();
 		for (auto* spell : allAbilities) {
-			if (!SpellVectorContainsElement(spell, &abilities) && a_actor->HasSpell(spell))
+			if (a_actor->HasSpell(spell) && !SpellVectorContainsElement(spell, &abilities)) {
 				a_actor->RemoveSpell(spell);
+			}
 		}
 
 		if (magicSpell && a_actor->HasSpell(magicSpell))
 			a_actor->RemoveSpell(magicSpell);
 
-		if (Cache::StoredData::GetSingleton()->GetShouldAddLight() && !a_actor->HasSpell(magicSpell)) {
+		if (Cache::StoredData::GetSingleton()->GetShouldAddLight() && !abilities.empty() && !a_actor->HasSpell(magicSpell) && (red < 255.0f || green < 255.0f || blue < 255.0f)) {
 			magicLight->data.color.red = red;
 			magicLight->data.color.green = green;
 			magicLight->data.color.blue = blue;
 			a_actor->AddSpell(magicSpell);
 		}
+		_loggerInfo("    >Finished evaluation");
 	}
 }
 
@@ -177,10 +165,9 @@ namespace ActorEvents {
 	}
 
 	void AnimationEventListener::RegisterActor(RE::Actor* a_actor) {
-		if (!a_actor) return;
-		if (this->managedActors.contains(a_actor)) return;
-		this->managedActors[a_actor] = true;
-		a_actor->AddAnimationGraphEventSink(this);
+		if (!a_actor || a_actor->IsDead()) return;
+		if (!this->managedActors.contains(a_actor))
+			a_actor->AddAnimationGraphEventSink(this);
 	}
 
 	/*
@@ -234,12 +221,7 @@ namespace ActorEvents {
 		auto eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
 		if (!eventActor) return continueEvent;
 		
-		if (a_event->loaded) {
-			EvaluateActor(eventActor);
-		}
-		else {
-			AnimationEventListener::GetSingleton()->UnRegisterActor(eventActor);
-		}
+		ActorRegistry::GetSingleton()->ProcessLoadEvent(eventActor, a_event->loaded);
 		return continueEvent;
 	}
 
@@ -250,7 +232,7 @@ namespace ActorEvents {
 		auto* actor = a_event ? reference->As<RE::Actor>() : nullptr;
 		if (!actor) return continueEvent;
 
-		EvaluateActor(actor);
+		ActorRegistry::GetSingleton()->ProcessEquipEvent(actor, a_event->equipped);
 		return continueEvent;
 	}
 
@@ -259,29 +241,179 @@ namespace ActorEvents {
 		auto eventActorPtr = a_event->actorDying;
 		auto* eventActorRefr = eventActorPtr ? eventActorPtr.get() : nullptr;
 		auto* eventActor = eventActorRefr ? eventActorRefr->As<RE::Actor>() : nullptr;
+		if (!eventActor) return continueEvent;
 
-		EvaluateActor(eventActor);
-		AnimationEventListener::GetSingleton()->UnRegisterActor(eventActor);
+		ActorRegistry::GetSingleton()->ProcessDeathEvent(eventActor);
 		return continueEvent;
 	}
 
 	RE::BSEventNotifyControl AnimationEventListener::ProcessEvent(const RE::BSAnimationGraphEvent* a_event, RE::BSTEventSource<RE::BSAnimationGraphEvent>* a_eventSource) {
 		if (!(a_event && a_eventSource)) return continueEvent;
 		auto tag = a_event->tag;
+		auto eventFormID = a_event->holder->formID;
+		auto* eventForm = RE::TESForm::LookupByID(eventFormID);
+		auto* eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
+		if (!eventActor) return continueEvent;
 
-		if (tag == "weaponDraw") {
-			auto eventFormID = a_event->holder->formID;
-			auto* eventForm = RE::TESForm::LookupByID(eventFormID);
-			auto* eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
-			EvaluateActor(eventActor, true, false);
+		if (eventActor && tag == "weaponDraw") {
+			ActorRegistry::GetSingleton()->ProcessAnimationEvent(eventActor, true);
 		}
-		else if (tag == "weaponSheathe") {
-			auto eventFormID = a_event->holder->formID;
-			auto* eventForm = RE::TESForm::LookupByID(eventFormID);
-			auto* eventActor = eventForm ? eventForm->As<RE::Actor>() : nullptr;
-			EvaluateActor(eventActor, true, true);
+		else if (eventActor && tag == "weaponSheathe") {
+			ActorRegistry::GetSingleton()->ProcessAnimationEvent(eventActor, false);
 		}
 
 		return continueEvent;
+	}
+}
+
+namespace ActorEvents {
+
+	void ActorEvents::ActorRegistry::ProcessDeathEvent(RE::Actor* a_actor) {
+		if (!this->managedActors.contains(a_actor)) return;
+		AnimationEventListener::GetSingleton()->UnRegisterActor(a_actor);
+		this->managedActors.erase(a_actor);
+	}
+
+	void ActorRegistry::ProcessEquipEvent(RE::Actor* a_actor, bool a_equipped) {
+		if (!a_actor || a_actor->IsDead()) return;
+		auto* actorData = this->managedActors.contains(a_actor) ? &this->managedActors[a_actor] : nullptr;
+
+		if (actorData) {
+			//Managed actor. Make sure that data has changed.
+			auto* rightData = a_actor->GetEquippedEntryData(false);
+			bool rightEnchanted = rightData ? rightData->IsEnchanted() : false;
+			auto* rightBound = rightEnchanted ? rightData->object : nullptr;
+			auto* rightWeapon = rightBound ? rightBound->As<RE::TESObjectWEAP>() : nullptr;
+
+			auto* leftData = a_actor->GetEquippedEntryData(true);
+			bool leftEnchanted = leftData ? leftData->IsEnchanted() : false;
+			auto* leftBound = leftEnchanted ? leftData->object : nullptr;
+			auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
+
+			//No longer has enchantments.
+			if (!(leftWeapon || rightWeapon)) {
+				AnimationEventListener::GetSingleton()->UnRegisterActor(a_actor);
+				this->managedActors.erase(a_actor);
+				return;
+			}
+
+			_loggerInfo("Managed actor equip call.");
+			//Unchanged data.
+			if (actorData->first.first == leftWeapon && actorData->first.second == rightWeapon) {
+				_loggerInfo("    >Discarding actor equip call.");
+				return;
+			}
+
+			_loggerInfo("    >Processing actor equip call:");
+			if (leftWeapon) _loggerInfo("        >{}", clib_util::editorID::get_editorID(leftWeapon));
+			if (rightWeapon) _loggerInfo("        >{}", clib_util::editorID::get_editorID(rightWeapon));
+
+			actorData->first.first = leftWeapon;
+			actorData->first.second = rightWeapon;
+			EvaluateActor(a_actor, leftWeapon, rightWeapon, a_actor->IsWeaponDrawn());
+		}
+		else {
+			//Unmanaged actor unequipped something. Don't care.
+			if (!a_equipped) return;
+
+			auto* rightData = a_actor->GetEquippedEntryData(false);
+			bool rightEnchanted = rightData ? rightData->IsEnchanted() : false;
+			auto* rightBound = rightEnchanted ? rightData->object : nullptr;
+			auto* rightWeapon = rightBound ? rightBound->As<RE::TESObjectWEAP>() : nullptr;
+
+			auto* leftData = a_actor->GetEquippedEntryData(true);
+			bool leftEnchanted = leftData ? leftData->IsEnchanted() : false;
+			auto* leftBound = leftEnchanted ? leftData->object : nullptr;
+			auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
+
+			//Unmanaged actor equipped non-enchanted weapon. Don't care.
+			if (!(leftWeapon || rightWeapon)) return;
+
+			bool weaponOut = a_actor->IsWeaponDrawn();
+			this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
+				(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
+					weaponOut);
+			AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
+			EvaluateActor(a_actor, leftWeapon, rightWeapon, weaponOut);
+		}
+	}
+
+	void ActorEvents::ActorRegistry::ProcessAnimationEvent(RE::Actor* a_actor, bool a_drawing) {
+		if (!a_actor || !this->managedActors.contains(a_actor)) return;
+
+		auto* actorData = &this->managedActors[a_actor];
+		auto* rightData = a_actor->GetEquippedEntryData(false);
+		bool rightEnchanted = rightData ? rightData->IsEnchanted() : false;
+		auto* rightBound = rightEnchanted ? rightData->object : nullptr;
+		auto* rightWeapon = rightBound ? rightBound->As<RE::TESObjectWEAP>() : nullptr;
+
+		auto* leftData = a_actor->GetEquippedEntryData(true);
+		bool leftEnchanted = leftData ? leftData->IsEnchanted() : false;
+		auto* leftBound = leftEnchanted ? leftData->object : nullptr;
+		auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
+
+		if (!(leftWeapon || rightWeapon)) {
+			AnimationEventListener::GetSingleton()->UnRegisterActor(a_actor);
+			this->managedActors.erase(a_actor);
+			return;
+		}
+
+		_loggerInfo("Evaluating {} (Managed Actor) Animation Call -> Drawn: {}", a_actor->GetName(), a_drawing);
+
+		if (actorData->first.first == leftWeapon
+			&& actorData->first.second == rightWeapon
+			&& actorData->second == a_drawing) {
+			_loggerInfo("    >Discarding animation call");
+			return;
+		}
+
+		if (!a_drawing && actorData->first.first == leftWeapon
+			&& actorData->first.second == rightWeapon) {
+			return;
+		}
+
+		AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
+		this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
+			(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
+				a_drawing);
+
+		if (leftWeapon) _loggerInfo("    >{}", clib_util::editorID::get_editorID(leftWeapon));
+		if (rightWeapon) _loggerInfo("    >{}", clib_util::editorID::get_editorID(rightWeapon));
+		EvaluateActor(a_actor, leftWeapon, rightWeapon, a_drawing);
+	}
+
+	void ActorEvents::ActorRegistry::ProcessLoadEvent(RE::Actor* a_actor, bool a_loaded) {
+		if (!a_loaded && this->managedActors.contains(a_actor)) {
+			AnimationEventListener::GetSingleton()->UnRegisterActor(a_actor);
+			this->managedActors.erase(a_actor);
+			return;
+		}
+
+		auto* rightData = a_actor->GetEquippedEntryData(false);
+		bool rightEnchanted = rightData ? rightData->IsEnchanted() : false;
+		auto* rightBound = rightEnchanted ? rightData->object : nullptr;
+		auto* rightWeapon = rightBound ? rightBound->As<RE::TESObjectWEAP>() : nullptr;
+
+		auto* leftData = a_actor->GetEquippedEntryData(true);
+		bool leftEnchanted = leftData ? leftData->IsEnchanted() : false;
+		auto* leftBound = leftEnchanted ? leftData->object : nullptr;
+		auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
+		
+		if (!(leftWeapon || rightWeapon)) {
+			//Super unecessary. This should never happen.
+			if (this->managedActors.contains(a_actor)) {
+				AnimationEventListener::GetSingleton()->UnRegisterActor(a_actor);
+				this->managedActors.erase(a_actor);
+			}
+			return;
+		}
+
+		if (!this->managedActors.contains(a_actor)) {
+			this->managedActors[a_actor] = this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
+				(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
+					a_actor->IsWeaponDrawn());
+			AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
+		}
+		EvaluateActor(a_actor, leftWeapon, rightWeapon, a_actor->IsWeaponDrawn());
 	}
 }
