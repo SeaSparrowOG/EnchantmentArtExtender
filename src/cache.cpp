@@ -435,7 +435,7 @@ namespace Cache {
 	}
 
 	bool Cache::StoredData::ApplyINISettings() {
-		std::filesystem::path f{ "./Data/SKSE/Plugins/EnchantmentEffectsExtender.ini" };
+		std::filesystem::path f{ "Data/SKSE/Plugins/EnchantmentArtExtender.ini" };
 		CSimpleIniA ini;
 		ini.SetUnicode();
 		ini.LoadFile(f.c_str());
