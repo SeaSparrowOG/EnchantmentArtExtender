@@ -430,7 +430,9 @@ namespace Cache {
 		this->RegisterReadyWeapons();
 		_loggerInfo("Found {} enchanted weapon, {} of which will have new effects.", this->weaponCache.size() + this->invalidWeapons.size(), this->weaponCache.size());
 		this->lightObject = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESObjectLIGH>(StringToFormID("0x800"), "EnchantmentArtExtender.esl");
-		this->lightSpell = RE::TESDataHandler::GetSingleton()->LookupForm<RE::SpellItem>(StringToFormID("0x802"), "EnchantmentArtExtender.esl");
+		this->enchantmentLightRight = RE::TESDataHandler::GetSingleton()->LookupForm<RE::SpellItem>(StringToFormID("0x801"), "EnchantmentArtExtender.esl");
+		this->enchantmentLightLeft = RE::TESDataHandler::GetSingleton()->LookupForm<RE::SpellItem>(StringToFormID("0x802"), "EnchantmentArtExtender.esl");
+		this->enchantmentLightBoth = RE::TESDataHandler::GetSingleton()->LookupForm<RE::SpellItem>(StringToFormID("0x803"), "EnchantmentArtExtender.esl");
 		return true;
 	}
 
@@ -445,6 +447,20 @@ namespace Cache {
 		}
 
 		this->shouldAddLights = ini.GetBoolValue("General", "bShouldAddLight", true);
+
+		if (!this->shouldAddLights) {
+			for (auto* ability : this->storedAbilities) {
+				auto effects = ability->effects;
+				for (auto* effect : effects) {
+					auto* baseEffect = effect->baseEffect;
+					if (!baseEffect) continue;
+					if (baseEffect->GetArchetype() != RE::EffectSetting::Archetype::kLight)
+						continue;
+					if (!baseEffect->data.associatedForm) continue;
+					baseEffect->data.associatedForm = nullptr;
+				}
+			}
+		}
 	}
 
 	bool Cache::StoredData::GetShouldAddLight() { return this->shouldAddLights; }

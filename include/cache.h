@@ -45,7 +45,9 @@ namespace Cache {
 		spellVector    GetAllAbilities();
 
 		RE::TESObjectLIGH* lightObject;
-		RE::SpellItem*     lightSpell;
+		RE::SpellItem*     enchantmentLightRight;
+		RE::SpellItem*     enchantmentLightLeft;
+		RE::SpellItem*     enchantmentLightBoth;
 	private:
 		bool               shouldDisableShaders;
 		bool               shouldAddLights;

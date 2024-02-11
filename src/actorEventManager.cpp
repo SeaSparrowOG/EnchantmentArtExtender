@@ -15,10 +15,12 @@ namespace {
 		std::vector<RE::SpellItem*> abilities = std::vector<RE::SpellItem*>();
 
 		auto* magicLight = Cache::StoredData::GetSingleton()->lightObject;
-		auto* magicSpell = Cache::StoredData::GetSingleton()->lightSpell;
-		float red = magicLight ? magicLight->emittanceColor.red : 255.0f;
-		float green = magicLight ? magicLight->emittanceColor.green : 255.0f;
-		float blue = magicLight ? magicLight->emittanceColor.blue : 255.0f;
+		auto* magicSpellRight = Cache::StoredData::GetSingleton()->enchantmentLightRight;
+		auto* magicSpellLeft = Cache::StoredData::GetSingleton()->enchantmentLightLeft;
+		auto* magicSpellBoth = Cache::StoredData::GetSingleton()->enchantmentLightBoth;
+		float red = 255.0f;
+		float green = 255.0f;
+		float blue = 255.0f;
 
 		if (a_bDrawn && a_rightWeapon) {
 			auto* enchantment = a_rightWeapon->formEnchanting;
@@ -105,13 +107,30 @@ namespace {
 			}
 		}
 
-		if (magicSpell && a_actor->HasSpell(magicSpell))
-			a_actor->RemoveSpell(magicSpell);
+		if (magicSpellRight && a_actor->HasSpell(magicSpellRight))
+			a_actor->RemoveSpell(magicSpellRight);
 
-		if (Cache::StoredData::GetSingleton()->GetShouldAddLight() && !abilities.empty() && !a_actor->HasSpell(magicSpell) && (red < 255.0f || green < 255.0f || blue < 255.0f)) {
+		if (magicSpellLeft && a_actor->HasSpell(magicSpellLeft))
+			a_actor->RemoveSpell(magicSpellLeft);
+
+		if (magicSpellBoth && a_actor->HasSpell(magicSpellBoth))
+			a_actor->RemoveSpell(magicSpellBoth);
+
+		if (Cache::StoredData::GetSingleton()->GetShouldAddLight() && (red < 255.0f || green < 255.0f || blue < 255.0f)) {
 			magicLight->data.color.red = red;
 			magicLight->data.color.green = green;
 			magicLight->data.color.blue = blue;
+			RE::SpellItem* magicSpell = nullptr;
+
+			if (a_leftWeapon && a_rightWeapon && magicSpellBoth) {
+				magicSpell = magicSpellBoth;
+			}
+			else if (a_leftWeapon && magicSpellLeft) {
+				magicSpell = magicSpellLeft;
+			}
+			else if (a_rightWeapon && magicSpellRight) {
+				magicSpell = magicSpellRight;
+			}
 			a_actor->AddSpell(magicSpell);
 		}
 	}
