@@ -346,14 +346,14 @@ namespace ActorEvents {
 			auto* leftBound = leftEnchanted ? leftData->object : nullptr;
 			auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
 
-			//Unmanaged actor equipped non-enchanted weapon. Don't care.
-			if (!(leftWeapon || rightWeapon)) return;
-
 			bool weaponOut = a_actor->IsWeaponDrawn();
 			this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
 				(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
 					weaponOut);
 			AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
+
+			//Unmanaged actor equipped non-enchanted weapon. Don't care.
+			if (!(leftWeapon || rightWeapon)) return;
 			EvaluateActor(a_actor, leftWeapon, rightWeapon, weaponOut);
 		}
 	}
@@ -410,12 +410,11 @@ namespace ActorEvents {
 			return;
 		}
 
-		if (!this->managedActors.contains(a_actor)) {
-			this->managedActors[a_actor] = this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
-				(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
-					a_actor->IsWeaponDrawn());
-			AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
-		}
-		EvaluateActor(a_actor, leftWeapon, rightWeapon, a_actor->IsWeaponDrawn());
+		this->managedActors[a_actor] = this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
+			(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
+				a_actor->IsWeaponDrawn());
+		AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
+		if (leftWeapon || rightWeapon)
+			EvaluateActor(a_actor, leftWeapon, rightWeapon, a_actor->IsWeaponDrawn());
 	}
 }
