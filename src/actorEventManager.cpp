@@ -308,13 +308,6 @@ namespace ActorEvents {
 			auto* leftBound = leftEnchanted ? leftData->object : nullptr;
 			auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
 
-			//No longer has enchantments.
-			if (!(leftWeapon || rightWeapon)) {
-				AnimationEventListener::GetSingleton()->UnRegisterActor(a_actor);
-				this->managedActors.erase(a_actor);
-				return;
-			}
-
 			//Unchanged data.
 			if (actorData->first.first == leftWeapon && actorData->first.second == rightWeapon) {
 				return;
@@ -371,12 +364,6 @@ namespace ActorEvents {
 		auto* leftBound = leftEnchanted ? leftData->object : nullptr;
 		auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
 
-		if (!(leftWeapon || rightWeapon)) {
-			AnimationEventListener::GetSingleton()->UnRegisterActor(a_actor);
-			this->managedActors.erase(a_actor);
-			return;
-		}
-
 		AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
 		this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
 			(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
@@ -400,20 +387,12 @@ namespace ActorEvents {
 		bool leftEnchanted = leftData ? leftData->IsEnchanted() : false;
 		auto* leftBound = leftEnchanted ? leftData->object : nullptr;
 		auto* leftWeapon = leftBound ? leftBound->As<RE::TESObjectWEAP>() : nullptr;
-		
-		if (!(leftWeapon || rightWeapon)) {
-			//Super unecessary. This should never happen.
-			if (this->managedActors.contains(a_actor)) {
-				AnimationEventListener::GetSingleton()->UnRegisterActor(a_actor);
-				this->managedActors.erase(a_actor);
-			}
-			return;
-		}
 
 		this->managedActors[a_actor] = this->managedActors[a_actor] = std::pair<std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>, bool>
 			(std::pair<RE::TESObjectWEAP*, RE::TESObjectWEAP*>(leftWeapon, rightWeapon),
 				a_actor->IsWeaponDrawn());
 		AnimationEventListener::GetSingleton()->RegisterActor(a_actor);
+
 		if (leftWeapon || rightWeapon)
 			EvaluateActor(a_actor, leftWeapon, rightWeapon, a_actor->IsWeaponDrawn());
 	}
