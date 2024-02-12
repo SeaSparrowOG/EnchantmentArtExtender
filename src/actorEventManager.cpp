@@ -22,7 +22,7 @@ namespace {
 		float green = 255.0f;
 		float blue = 255.0f;
 
-		if (a_bDrawn && a_rightWeapon) {
+		if (a_bDrawn && a_rightWeapon && !a_rightWeapon->IsBound()) {
 			auto* enchantment = a_rightWeapon->formEnchanting;
 			if (!enchantment) enchantment = a_actor->GetEquippedEntryData(false)->GetEnchantment();
 
@@ -58,7 +58,7 @@ namespace {
 			}
 		}
 
-		if (a_bDrawn && a_leftWeapon) {
+		if (a_bDrawn && a_leftWeapon && !a_rightWeapon->IsBound()) {
 			auto* enchantment = a_leftWeapon->formEnchanting;
 			if (!enchantment) enchantment = a_actor->GetEquippedEntryData(true)->GetEnchantment();
 
