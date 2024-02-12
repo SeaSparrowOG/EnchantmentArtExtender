@@ -42,6 +42,14 @@
       "binaryDir": "${sourceDir}/build-15"
     },
     {
+      "name": "ae-old",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build-16-old",
+      "cacheVariables": {
+        "BUILD_SKYRIMAE": true
+      }
+    },
+    {
       "name": "ae",
       "hidden": true,
       "binaryDir": "${sourceDir}/build",
@@ -69,6 +77,16 @@
         "vs2022",
         "ae"
       ]
+    },
+    {
+      "name": "vs2022-windows-vcpkg-ae-old",
+      "inherits": [
+        "cmake-dev",
+        "vcpkg",
+        "windows",
+        "vs2022",
+        "ae-old"
+      ]
     }
   ],
   "buildPresets": [
@@ -80,6 +98,11 @@
     {
       "name": "Release - Outdated",
       "configurePreset": "vs2022-windows-vcpkg-se",
+      "configuration": "Release"
+    },
+    {
+      "name": "Release - Outdated - 1.6",
+      "configurePreset": "vs2022-windows-vcpkg-ae-old",
       "configuration": "Release"
     }
   ]

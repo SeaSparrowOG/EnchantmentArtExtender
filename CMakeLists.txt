@@ -17,9 +17,14 @@ endmacro()
 
 macro(find_commonlib_path)
 	if(CommonLibName AND NOT ${CommonLibName} STREQUAL "")
-		find_path(CommonLibPath
-			include/REL/Relocation.h 
-			PATHS extern/${CommonLibName})
+		if (SUPPORT_LATEST)
+			find_path(CommonLibPath
+				include/REL/Relocation.h 
+				PATHS extern/${CommonLibName})
+		else() 
+			set_from_environment(${CommonLibName}Path)
+			set(CommonLibPath ${${CommonLibName}Path})
+		endif()
 	endif()
 endmacro()
 
@@ -34,6 +39,10 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STR
 if (BUILD_SKYRIMAE)
 	add_compile_definitions(SKYRIM_AE)
 	add_compile_definitions(SKYRIM_SUPPORT_AE)
+
+	if (NOT SUPPORT_LATEST)
+		add_compile_definitions(OUTDATED)
+	endif ()
 endif()
 
 # ---- Project ----

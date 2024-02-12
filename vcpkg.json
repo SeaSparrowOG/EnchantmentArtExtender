@@ -5,6 +5,7 @@
   "homepage": "",
   "license": "MIT",
   "dependencies": [
+    "boost-stl-interfaces",
     "rsm-binary-io",
     "spdlog",
     "clib-util",
