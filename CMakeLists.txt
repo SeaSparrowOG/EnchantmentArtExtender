@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 set(NAME "EnchantmentEffectExtender" CACHE STRING "")
-set(VERSION 1.0.1 CACHE STRING "")
+set(VERSION 1.0.2 CACHE STRING "")
 
 # ---- Options ----
 option(SUPPORT_LATEST "Builds for the latest version of Skyrim." OFF)
