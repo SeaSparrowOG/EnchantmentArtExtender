@@ -3,7 +3,8 @@
 namespace PrivateFunctions {
 	bool ShouldRebuildINI(CSimpleIniA* a_ini) {
 		const char* generalKeys[] = {
-			"bSuppressOriginalShader",
+			//Removed until I figure out a way to exclude bound weapons
+			//"bSuppressOriginalShader",
 			"bShouldAddLight" };
 
 		std::list<CSimpleIniA::Entry> keyHolder;
@@ -35,7 +36,7 @@ namespace Settings {
 
 		if (createEntries) {
 			ini.Delete("General", NULL);
-			ini.SetBoolValue("General", "bSuppressOriginalShader", true, ";Disables the original shader of the enchantment. Recommended: false");
+			//ini.SetBoolValue("General", "bSuppressOriginalShader", true, ";Disables the original shader of the enchantment. Recommended: false");
 			ini.SetBoolValue("General", "bShouldAddLight", true, ";Mixes the light of the given enchantments (provided they have light). Recommended: true");
 			ini.SaveFile(f.c_str());
 		}

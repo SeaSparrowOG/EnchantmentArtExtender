@@ -442,7 +442,7 @@ namespace Cache {
 		ini.SetUnicode();
 		ini.LoadFile(f.c_str());
 
-		if (ini.GetBoolValue("General", "bSuppressOriginalShader", true)) {
+		if (ini.GetBoolValue("General", "bSuppressOriginalShader", false)) {
 			DisableEnchantmentShader();
 		}
 

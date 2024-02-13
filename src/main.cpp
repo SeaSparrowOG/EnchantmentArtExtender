@@ -105,7 +105,9 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * 
         SetupLog();
         _loggerInfo("Starting up Enchantment Effects Extender.");
 #ifdef SKYRIM_AE
-        _loggerInfo("Plugin Version: {}.{}.{}", Version::MAJOR, Version::MINOR, Version::PATCH);
+        //Issues with this
+        //_loggerInfo("Plugin Version: {}.{}.{}", Version::MAJOR, Version::MINOR, Version::PATCH);
+        _loggerInfo("Plugin Version: {}.{}.{}", 1,0,2);
 #else 
         _loggerInfo("Plugin Version: {}.{}.{}, 1.5 build.", Version::MAJOR, Version::MINOR, Version::PATCH);
         _loggerInfo("Do not report ANY issues with this version.");

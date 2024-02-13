@@ -58,7 +58,7 @@ namespace {
 			}
 		}
 
-		if (a_bDrawn && a_leftWeapon && !a_rightWeapon->IsBound()) {
+		if (a_bDrawn && a_leftWeapon && !a_leftWeapon->IsBound()) {
 			auto* enchantment = a_leftWeapon->formEnchanting;
 			if (!enchantment) enchantment = a_actor->GetEquippedEntryData(true)->GetEnchantment();
 
