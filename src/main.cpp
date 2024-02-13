@@ -107,7 +107,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * 
 #ifdef SKYRIM_AE
         //Issues with this
         //_loggerInfo("Plugin Version: {}.{}.{}", Version::MAJOR, Version::MINOR, Version::PATCH);
-        _loggerInfo("Plugin Version: {}.{}.{}", 1,0,2);
+        _loggerInfo("Plugin Version: {}.{}.{}", 1,0,3);
 #else 
         _loggerInfo("Plugin Version: {}.{}.{}, 1.5 build.", Version::MAJOR, Version::MINOR, Version::PATCH);
         _loggerInfo("Do not report ANY issues with this version.");
