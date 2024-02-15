@@ -47,6 +47,16 @@ namespace {
 		return nullptr;
 	}
 
+	RE::EnchantmentItem* GetEnchantmentFromString(std::string a_hex, std::string a_source) {
+		if (IsModPresent(a_source)) {
+			RE::FormID id = StringToFormID(a_hex);
+			if (!id) return nullptr;
+
+			return RE::TESDataHandler::GetSingleton()->LookupForm<RE::EnchantmentItem>(id, a_source);
+		}
+		return nullptr;
+	}
+
 	RE::SpellItem* GetSpellFromString(std::string a_hex, std::string a_source) {
 		if (IsModPresent(a_source)) {
 			RE::FormID id = StringToFormID(a_hex);
@@ -118,9 +128,23 @@ namespace Cache {
 				newSwap.artSource = artSource;
 				newSwap.exclusive = exclusive;
 
+				//New in version 2: Added the Enchantment field that can be used instead of EnchantmentKeywords.
 				auto requiredKeywords = config["EnchantmentKeywords"];
-				for (auto& keyword : requiredKeywords) {
-					newSwap.requiredEnchantmentKeywords.push_back(keyword.asString());
+				if (requiredKeywords) {
+					for (auto& keyword : requiredKeywords) {
+						newSwap.requiredEnchantmentKeywords.push_back(keyword.asString());
+					}
+				}
+				else {
+					auto requiredEnchantments = config["Enchantment"];
+					for (auto& enchantment : requiredEnchantments) {
+						auto sourceMod = enchantment["Source"].asString();
+						auto id = enchantment["ID"].asString();
+
+						auto* enchantment = GetEnchantmentFromString(id, sourceMod);
+						if (!enchantment) continue;
+						newSwap.requiredEnchantments.push_back(enchantment);
+					}
 				}
 
 				bool isValid = false;
@@ -184,6 +208,7 @@ namespace Cache {
 		}
 	}
 
+	//Fuck it, redo this.
 	swapDataVector StoredData::GetMatchingSwaps(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment) {
 		auto response = swapDataVector();
 		auto exclusiveResponse = SwapData();
@@ -204,24 +229,39 @@ namespace Cache {
 			if (!isSwapExclusive && hasExclusiveMatch) continue;
 
 			size_t matches = swapEntry.requiredEnchantmentKeywords.size();
-			matchingDegree += matches;
+			if (matches > 0) {
+				matchingDegree += matches;
 
-			std::vector<std::string> matchAgainst = swapEntry.requiredEnchantmentKeywords;
-			for (auto& requiredEnchantmentKeyword : swapEntry.requiredEnchantmentKeywords) {
-				for (auto* effect : a_enchantment->effects) {
-					if (effect->baseEffect->HasKeywordString(requiredEnchantmentKeyword)) {
-						for (auto it = matchAgainst.begin(); it != matchAgainst.end(); ++it) {
-							if (requiredEnchantmentKeyword == *it) {
-								matchAgainst.erase(it);
-								break;
+				std::vector<std::string> matchAgainst = swapEntry.requiredEnchantmentKeywords;
+				for (auto& requiredEnchantmentKeyword : swapEntry.requiredEnchantmentKeywords) {
+					for (auto* effect : a_enchantment->effects) {
+						if (effect->baseEffect->HasKeywordString(requiredEnchantmentKeyword)) {
+							for (auto it = matchAgainst.begin(); it != matchAgainst.end(); ++it) {
+								if (requiredEnchantmentKeyword == *it) {
+									matchAgainst.erase(it);
+									break;
+								}
 							}
 						}
 					}
 				}
+				if (!matchAgainst.empty())
+					continue;
 			}
-
-			if (!matchAgainst.empty())
-				continue;
+			//Version 2 added "Enchantment" as a field.
+			else {
+				bool hasMatch = false;
+				matches = swapEntry.requiredEnchantments.size();
+				if (matches > 0) {
+					for (auto& requiredEnchantment : swapEntry.requiredEnchantments) {
+						if (requiredEnchantment == a_enchantment) {
+							hasMatch = true;
+						}
+					}
+				}
+				if (!hasMatch)
+					continue;
+			}
 
 			if (!swapEntry.requiredWeapons.empty()) {
 				for (auto& validWeapon : swapEntry.requiredWeapons) {

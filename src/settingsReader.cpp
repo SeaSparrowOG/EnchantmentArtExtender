@@ -55,7 +55,8 @@ namespace Settings {
 		//Check 1: Check for outdated framework version.
 		auto minVersionField = a_JSON["MinimumVersion"];
 		int minVersionInt = minVersionField ? minVersionField.asInt() : 0;
-		int currentVersion = Version::MAJOR + Version::MINOR + Version::PATCH;
+		int currentVersion = 2;
+
 		if (minVersionInt > currentVersion) {
 			response.valid = false;
 			response.outdatedFrameworkVersion = true;
@@ -63,7 +64,8 @@ namespace Settings {
 		}
 
 		//Check 2: Check for missing fields.
-		std::string requiredFields[] = { "EnchantmentKeywords", "ArtSource", "SwapData" };
+		std::string requiredFields[] = { "ArtSource", "SwapData" };
+		std::string requiredFieldsAtLeastOne = { "EnchantmentKeywords", "Enchantment" };
 		bool foundAllFields = true;
 
 		for (auto field : requiredFields) {
@@ -75,8 +77,43 @@ namespace Settings {
 			}
 		}
 
+		//New in version code 2: Enchantment Keywords and Enchantments. Need at least one.
+		bool foundOne = false;
+		for (auto field : requiredFieldsAtLeastOne) {
+			auto found = a_JSON[field];
+			if (found) 
+				foundOne = false;
+		}
+
+		if (!foundOne) {
+			response.valid = false;
+			response.missingRequiredFields.push_back("EnchantmentKeywords");
+		}
+
+		if (a_JSON["Enchantment"]) {
+			auto allFields = a_JSON["Enchantment"];
+			if (allFields.size() != 2) {
+				response.valid = false;
+				response.foundGarbage.push_back("Enchantment");
+			}
+			else {
+				auto idRaw = a_JSON["Enchantment"]["ID"];
+				auto sourceRaw = a_JSON["Enchantment"]["Source"];
+				if (!(idRaw && sourceRaw)) {
+					response.valid = false;
+					response.foundGarbage.push_back("Enchantment");
+				}
+				else {
+					if (!(idRaw.isString() && sourceRaw.isString())) {
+						response.valid = false;
+						response.foundGarbage.push_back("Enchantment");
+					}
+				}
+			}
+		}
+
 		//Check 3: Check for garbage.
-		std::string expectedFields[] = { "MinimumVersion", "EnchantmentKeywords", "ArtSource", "SwapData", "Exclusive", "$schema" };
+		std::string expectedFields[] = { "MinimumVersion", "EnchantmentKeywords", "Enchantment", "ArtSource", "SwapData", "Exclusive", "$schema" };
 		auto allFields = a_JSON.getMemberNames();
 		for (auto field : allFields) {
 			bool fieldIsValid = false;
@@ -96,6 +133,7 @@ namespace Settings {
 		std::string expectedString[] = { "ArtSource" };
 		std::string expectedList[] = { "EnchantmentKeywords" , "SwapData" };
 		std::string expectedBool[] = { "Exclusive" };
+		std::string expectedTopLevelObject[] = { "Enchantment" };
 
 		for (auto entry : expectedString) {
 			auto field = a_JSON[entry];
@@ -119,6 +157,14 @@ namespace Settings {
 			if (field.isBool()) continue;
 			response.valid = false;
 			response.expectedBool.push_back(entry);
+		}
+
+		for (auto entry : expectedTopLevelObject) {
+			auto field = a_JSON[entry];
+			if (!field) continue;
+			if (field.isObject()) continue;
+			response.valid = false;
+			response.expectedObject.push_back(entry);
 		}
 
 		//Check for garbage and missing masters in SwapData.

@@ -9,6 +9,7 @@ namespace Cache {
 #define stringVector std::vector<std::string>
 #define weaponVector std::vector<RE::TESObjectWEAP*>
 #define spellVector std::vector<RE::SpellItem*>
+#define enchantmentVector std::vector<RE::EnchantmentItem*>
 #define abilityCache std::unordered_map<RE::TESObjectWEAP*, swapDataVector>
 
 	/*
@@ -21,16 +22,17 @@ namespace Cache {
 		We can fake each weapon having its own enchantment effect by assigning
 		an ability to it to be played when it is equipped.
 		*/
-		RE::SpellItem* leftAbility;
-		RE::SpellItem* rightAbility;
-		std::string    artSource;
-		std::string    name;
-		bool           exclusive;
-		stringVector   requiredEnchantmentKeywords;
-		stringVector   requiredWeaponKeywords;
-		stringVector   excludedWeaponKeywords;
-		weaponVector   requiredWeapons;
-		weaponVector   excludedWeapons;
+		RE::SpellItem*    leftAbility;
+		RE::SpellItem*    rightAbility;
+		std::string       artSource;
+		std::string       name;
+		bool              exclusive;
+		stringVector      requiredEnchantmentKeywords;
+		stringVector      requiredWeaponKeywords;
+		stringVector      excludedWeaponKeywords;
+		weaponVector      requiredWeapons;
+		weaponVector      excludedWeapons;
+		enchantmentVector requiredEnchantments;
 	};
 
 	/*
