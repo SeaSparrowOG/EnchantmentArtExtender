@@ -11,6 +11,8 @@ namespace {
 
 	void EvaluateActor(RE::Actor* a_actor, RE::TESObjectWEAP* a_leftWeapon, RE::TESObjectWEAP* a_rightWeapon, bool a_bDrawn) {
 		if (!a_actor) return;
+		//New guard for paused menus
+		if (RE::UI::GetSingleton()->GameIsPaused()) return;
 
 		std::vector<RE::SpellItem*> abilities = std::vector<RE::SpellItem*>();
 
