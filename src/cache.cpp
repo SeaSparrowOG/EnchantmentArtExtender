@@ -269,6 +269,7 @@ namespace Cache {
 							for (auto it = matchAgainst.begin(); it != matchAgainst.end(); ++it) {
 								if (requiredEnchantmentKeyword == *it) {
 									matchAgainst.erase(it);
+									foundMatch = true;
 									break;
 								}
 							}
