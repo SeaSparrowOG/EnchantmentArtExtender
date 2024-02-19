@@ -30,6 +30,11 @@ namespace {
 		return result;
 	}
 
+	/**
+	* Checks to see if a given mod (with the extension) is present.
+	* @param a_modName: The name of the mod, including the extension.
+	* @return True if it is active, false otherwise.
+	*/
 	bool IsModPresent(std::string a_modName) {
 		auto* found = RE::TESDataHandler::GetSingleton()->LookupLoadedLightModByName(a_modName);
 		if (!found) found = RE::TESDataHandler::GetSingleton()->LookupLoadedModByName(a_modName);
@@ -37,6 +42,12 @@ namespace {
 		return false;
 	}
 
+	/**
+	* Returns a weapon pointer to a weapon.
+	* @param a_hex The formID of the weapon. If it is not a hex, it gets discarded.
+	* @param a_source The mod which defines the weapon. If it is not active, it gets discarded.
+	* @return The pointer to the weapon if found, nullptr otherwise.
+	*/
 	RE::TESObjectWEAP* GetWeaponFromString(std::string a_hex, std::string a_source) {
 		if (IsModPresent(a_source)) {
 			RE::FormID id = StringToFormID(a_hex);
@@ -47,6 +58,12 @@ namespace {
 		return nullptr;
 	}
 
+	/**
+	* Returns a pointer to an enchantment.
+	* @param a_hex The formID of the enchantment. If it is not a hex, it gets discarded.
+	* @param a_source The mod which defines the enchantment. If it is not active, it gets discarded.
+	* @return The pointer to the enchantment if found, nullptr otherwise.
+	*/
 	RE::EnchantmentItem* GetEnchantmentFromString(std::string a_hex, std::string a_source) {
 		if (IsModPresent(a_source)) {
 			RE::FormID id = StringToFormID(a_hex);
@@ -57,6 +74,12 @@ namespace {
 		return nullptr;
 	}
 
+	/**
+	* Returns a pointer to a spell.
+	* @param a_hex The formID of the spell. If it is not a hex, it gets discarded.
+	* @param a_source The mod which defines the spell. If it is not active, it gets discarded.
+	* @return The pointer to the spell if found, nullptr otherwise.
+	*/
 	RE::SpellItem* GetSpellFromString(std::string a_hex, std::string a_source) {
 		if (IsModPresent(a_source)) {
 			RE::FormID id = StringToFormID(a_hex);
@@ -66,6 +89,10 @@ namespace {
 		return nullptr;
 	}
 
+	/**
+	* Prints out a small formatted message to the log with the information of a given swap.
+	* @param swap The actual swap to test for.
+	*/
 	void SwapReport(Cache::SwapData swap) {
 		_loggerInfo("    Report for swap {}:", swap.name);
 		_loggerInfo("        Left Ability: {}", clib_util::editorID::get_editorID(swap.leftAbility));
@@ -91,6 +118,9 @@ namespace {
 		_loggerInfo("==============================================");
 	}
 
+	/**
+	* Doesn't work, don't use.
+	*/
 	bool DisableEnchantmentShader() {
 		auto& enchantmentArray = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::EnchantmentItem>();
 
@@ -208,7 +238,6 @@ namespace Cache {
 		}
 	}
 
-	//Fuck it, redo this.
 	swapDataVector StoredData::GetMatchingSwaps(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment) {
 		auto response = swapDataVector();
 		auto exclusiveResponse = SwapData();
@@ -234,8 +263,9 @@ namespace Cache {
 
 				std::vector<std::string> matchAgainst = swapEntry.requiredEnchantmentKeywords;
 				for (auto& requiredEnchantmentKeyword : swapEntry.requiredEnchantmentKeywords) {
-					for (auto* effect : a_enchantment->effects) {
-						if (effect->baseEffect->HasKeywordString(requiredEnchantmentKeyword)) {
+					bool foundMatch = false;
+					for (auto effectIterator = a_enchantment->effects.begin(); !foundMatch && effectIterator != a_enchantment->effects.end(); ++effectIterator) {
+						if ((*effectIterator)->baseEffect->HasKeywordString(requiredEnchantmentKeyword)) {
 							for (auto it = matchAgainst.begin(); it != matchAgainst.end(); ++it) {
 								if (requiredEnchantmentKeyword == *it) {
 									matchAgainst.erase(it);
@@ -253,8 +283,8 @@ namespace Cache {
 				bool hasMatch = false;
 				matches = swapEntry.requiredEnchantments.size();
 				if (matches > 0) {
-					for (auto& requiredEnchantment : swapEntry.requiredEnchantments) {
-						if (requiredEnchantment == a_enchantment) {
+					for (auto it = swapEntry.requiredEnchantments.begin(); !hasMatch && it != swapEntry.requiredEnchantments.end(); ++it) {
+						if (*it == a_enchantment) {
 							hasMatch = true;
 						}
 					}
