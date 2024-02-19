@@ -171,9 +171,9 @@ namespace Cache {
 						auto sourceMod = enchantment["Source"].asString();
 						auto id = enchantment["ID"].asString();
 
-						auto* enchantment = GetEnchantmentFromString(id, sourceMod);
-						if (!enchantment) continue;
-						newSwap.requiredEnchantments.push_back(enchantment);
+						auto* foundEnchantment = GetEnchantmentFromString(id, sourceMod);
+						if (!foundEnchantment) continue;
+						newSwap.requiredEnchantments.push_back(foundEnchantment);
 					}
 				}
 
