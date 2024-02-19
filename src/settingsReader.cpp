@@ -65,7 +65,7 @@ namespace Settings {
 
 		//Check 2: Check for missing fields.
 		std::string requiredFields[] = { "ArtSource", "SwapData" };
-		std::string requiredFieldsAtLeastOne = { "EnchantmentKeywords", "Enchantment" };
+		std::string requiredFieldsAtLeastOne[] = {"EnchantmentKeywords", "Enchantment"};
 		bool foundAllFields = true;
 
 		for (auto field : requiredFields) {
@@ -79,10 +79,11 @@ namespace Settings {
 
 		//New in version code 2: Enchantment Keywords and Enchantments. Need at least one.
 		bool foundOne = false;
+
 		for (auto field : requiredFieldsAtLeastOne) {
 			auto found = a_JSON[field];
-			if (found) 
-				foundOne = false;
+			if (found)
+				foundOne = true;
 		}
 
 		if (!foundOne) {
