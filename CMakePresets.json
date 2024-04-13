@@ -12,6 +12,13 @@
       "cacheVariables": {
         "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
         "CMAKE_CXX_FLAGS": "/EHsc /MP /W4 /external:anglebrackets /external:W0 $penv{CXXFLAGS}"
+      },
+      "errors": {
+        "deprecated": true
+      },
+      "warnings": {
+        "deprecated": true,
+        "dev": true
       }
     },
     {
@@ -51,35 +58,40 @@
       }
     },
     {
+      "name": "vr",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "BUILD_SKYRIMVR": true
+      }
+    },
+    {
       "name": "vs2022-windows-vcpkg-se",
-      "inherits": [
-        "cmake-dev",
-        "vcpkg",
-        "windows",
-        "vs2022",
-        "se"
-      ]
+      "inherits": ["cmake-dev", "vcpkg", "windows", "vs2022", "se"]
     },
     {
       "name": "vs2022-windows-vcpkg-ae",
-      "inherits": [
-        "cmake-dev",
-        "vcpkg",
-        "windows",
-        "vs2022",
-        "ae"
-      ]
+      "inherits": ["cmake-dev", "vcpkg", "windows", "vs2022", "ae"]
+    },
+    {
+      "name": "vs2022-windows-vcpkg-vr",
+      "inherits": ["cmake-dev", "vcpkg", "windows", "vs2022", "vr"]
     }
   ],
   "buildPresets": [
     {
-      "name": "Release",
+      "name": "vs2022-windows-vcpkg-ae",
       "configurePreset": "vs2022-windows-vcpkg-ae",
       "configuration": "Release"
     },
     {
-      "name": "Release - Outdated",
+      "name": "vs2022-windows-vcpkg-se",
       "configurePreset": "vs2022-windows-vcpkg-se",
+      "configuration": "Release"
+    },
+    {
+      "name": "vs2022-windows-vcpkg-vr",
+      "configurePreset": "vs2022-windows-vcpkg-vr",
       "configuration": "Release"
     }
   ]

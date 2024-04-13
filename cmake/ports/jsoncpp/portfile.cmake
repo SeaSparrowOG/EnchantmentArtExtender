@@ -1,0 +1,34 @@
+vcpkg_from_github(
+    OUT_SOURCE_PATH SOURCE_PATH
+    REPO open-source-parsers/jsoncpp
+    REF d40513ada5c9cc8a99527d18977ee9c47940d399
+    SHA512 6278db7f2c49d2af91730865e80748e0592fe44a0a3a34b08d2a8a772e41d9adfeab3aa3007d8c546fd07357ec73e4eded38894498c7561c7056ed6940c4b414
+    HEAD_REF master
+)
+
+string(COMPARE EQUAL "${VCPKG_LIBRARY_LINKAGE}" "static" JSONCPP_STATIC)
+string(COMPARE EQUAL "${VCPKG_CRT_LINKAGE}" "static" STATIC_CRT)
+
+vcpkg_cmake_configure(
+    SOURCE_PATH "${SOURCE_PATH}"
+    OPTIONS
+    -DJSONCPP_WITH_CMAKE_PACKAGE=ON
+    -DBUILD_STATIC_LIBS=${JSONCPP_STATIC}
+    -DJSONCPP_STATIC_WINDOWS_RUNTIME=${STATIC_CRT}
+    -DJSONCPP_WITH_PKGCONFIG_SUPPORT=ON
+    -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
+    -DJSONCPP_WITH_TESTS=OFF
+    -DJSONCPP_WITH_EXAMPLE=OFF
+    -DBUILD_OBJECT_LIBS=OFF
+)
+
+vcpkg_cmake_install()
+
+vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/jsoncpp)
+
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
+
+vcpkg_copy_pdbs()
+vcpkg_fixup_pkgconfig()
+
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
