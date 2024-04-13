@@ -90,7 +90,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * 
 #	ifndef SKYRIMVR
         < SKSE::RUNTIME_1_5_39
 #	else
-        > SKSE::RUNTIME_VR_1_4_15_1
+        < SKSE::RUNTIME_VR_1_4_15_1
 #	endif
         ) {
         SKSE::log::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
@@ -109,7 +109,9 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface * 
         //_loggerInfo("Plugin Version: {}.{}.{}", Version::MAJOR, Version::MINOR, Version::PATCH);
         _loggerInfo("Plugin Version: {}.{}.{}", 1,0,3);
 #else 
-        _loggerInfo("Plugin Version: {}.{}.{}, 1.5 build.", Version::MAJOR, Version::MINOR, Version::PATCH);
+        const auto runtimeVer = REL::Module::get().version();
+        const auto skyrimVer = fmt::format("Skyrim v{}.{}.{}.{}"sv, runtimeVer[0], runtimeVer[1],runtimeVer[2], runtimeVer[3]);
+        _loggerInfo("Plugin Version: {}.{}.{}, {}"sv, Version::MAJOR, Version::MINOR, Version::PATCH, skyrimVer);
         _loggerInfo("Do not report ANY issues with this version.");
 #endif
         _loggerInfo("==================================================");
