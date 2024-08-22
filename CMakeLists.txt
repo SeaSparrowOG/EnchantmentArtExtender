@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.21)
-set(NAME "EnchantmentEffectExtender" CACHE STRING "")
-set(VERSION 1.0.2 CACHE STRING "")
+set(PROJECT_AUTHOR "SeaSparrow" CACHE STRING "")
+set(NAME "EnchantmentArtExtender" CACHE STRING "")
+set(VERSION 2.0.0 CACHE STRING "")
 
 # ---- Options ----
-option(SUPPORT_LATEST "Builds for the latest version of Skyrim." OFF)
-option(SUPPORT_VR "Build for VR. I cannot test this." OFF)
-option(BUILD_SKYRIMVR "Build for Skyrim VR" OFF)
-option(BUILD_SKYRIMAE "Build for Skyrim AE" OFF)
+option(BUILD_TEST "Sets log level to debug." OFF)
 
 # ---- Cache build vars ----
 macro(set_from_environment VARIABLE)
@@ -16,10 +14,16 @@ macro(set_from_environment VARIABLE)
 endmacro()
 
 macro(find_commonlib_path)
-	if(CommonLibName AND NOT ${CommonLibName} STREQUAL "")
-		find_path(CommonLibPath
-			include/REL/Relocation.h 
+	if (CommonLibName AND NOT ${CommonLibName} STREQUAL "")
+		# Check path
+		set_from_environment(${CommonLibName}Path)
+		set(CommonLibPath ${${CommonLibName}Path})
+		if (${CommonLibPath} STREQUAL "CommonLibPath-NOTFOUND")
+			#Check extern
+			find_path(CommonLibPath
+			include/REL/Relocation.h
 			PATHS extern/${CommonLibName})
+		endif()
 	endif()
 endmacro()
 
@@ -31,9 +35,12 @@ set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
 set(Boost_USE_STATIC_RUNTIME OFF CACHE BOOL "")
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "")
 
-if (BUILD_SKYRIMAE)
-	add_compile_definitions(SKYRIM_AE)
-	add_compile_definitions(SKYRIM_SUPPORT_AE)
+add_compile_definitions(SKYRIM_AE)
+add_compile_definitions(SKYRIM_SUPPORT_AE)
+add_compile_definitions(SKSE_SUPPORT_XBYAK)
+
+if (BUILD_TEST)
+	add_compile_definitions(DEBUG)
 endif()
 
 # ---- Project ----
@@ -137,9 +144,8 @@ target_include_directories(
 	${PROJECT_NAME}
 	PRIVATE
 		${CMAKE_CURRENT_BINARY_DIR}/include
-		${CMAKE_CURRENT_SOURCE_DIR}/include
+		${CMAKE_CURRENT_SOURCE_DIR}/src
 		${CLIB_UTIL_INCLUDE_DIRS}
-		${JSONCPP_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -152,7 +158,7 @@ target_link_libraries(
 target_precompile_headers(
 	${PROJECT_NAME}
 	PRIVATE
-		include/PCH.h
+		src/PCH.h
 )
 
 if (MSVC)
@@ -183,13 +189,9 @@ endif ()
 # ---- Post build ----
 if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
 	if(BUILD_SKYRIMAE)
-		if (SUPPORT_LATEST)
-			set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME} - Latest")
-		else()
-			set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME} - 640")
-		endif()
+		set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME}")
 	else() 
-		set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME} - 97")
+		set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME} - Test")
 	endif()
 endif()
 

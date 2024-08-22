@@ -1,6 +1,6 @@
 set(headers ${headers}
-	include/PCH.h
-	include/actorEventManager.h
-	include/cache.h
-	include/settingsReader.h
+	src/PCH.h
+	src/actorEventManager.h
+	src/cache.h
+	src/settingsReader.h
 )
