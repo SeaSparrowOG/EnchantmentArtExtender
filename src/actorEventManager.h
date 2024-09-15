@@ -23,13 +23,13 @@ namespace ActorEvents {
 			stl::write_thunk_call<ClearShader>(target1.address());
 
 			REL::Relocation<std::uintptr_t> target2{ REL::ID(34194), 0x45 };
-			stl::write_thunk_call<ClearShader>(target2.address());
+			//stl::write_thunk_call<ClearShader>(target2.address());
 
 			REL::Relocation<std::uintptr_t> target3{ REL::ID(34156), 0x31 };
-			stl::write_thunk_call<ClearShader>(target3.address());
+			//stl::write_thunk_call<ClearShader>(target3.address());
 
 			REL::Relocation<std::uintptr_t> target4{ REL::ID(34135), 0x3E };
-			stl::write_thunk_call<ClearShader>(target4.address());
+			//stl::write_thunk_call<ClearShader>(target4.address());
 			return true;
 		}
 

@@ -9,7 +9,7 @@ namespace {
 		return false;
 	}
 
-	void EvaluateActor(RE::Actor* a_actor, RE::TESObjectWEAP* a_leftWeapon, RE::TESObjectWEAP* a_rightWeapon, bool a_bDrawn) {
+	void EvaluateActor(RE::Actor* a_actor, RE::TESObjectWEAP* a_leftWeapon, RE::TESObjectWEAP* a_rightWeapon) {
 		if (!a_actor) return;
 		//New guard for paused menus
 		if (RE::UI::GetSingleton()->GameIsPaused()) return;
@@ -24,7 +24,9 @@ namespace {
 		float green = 255.0f;
 		float blue = 255.0f;
 
-		if (a_bDrawn && a_rightWeapon && !a_rightWeapon->IsBound()) {
+		bool drawn = a_actor->IsWeaponDrawn();
+
+		if (drawn && a_rightWeapon && !a_rightWeapon->IsBound()) {
 			auto* enchantment = a_rightWeapon->formEnchanting;
 			if (!enchantment) enchantment = a_actor->GetEquippedEntryData(false)->GetEnchantment();
 
@@ -60,7 +62,7 @@ namespace {
 			}
 		}
 
-		if (a_bDrawn && a_leftWeapon && !a_leftWeapon->IsBound()) {
+		if (drawn && a_leftWeapon && !a_leftWeapon->IsBound()) {
 			auto* enchantment = a_leftWeapon->formEnchanting;
 			if (!enchantment) enchantment = a_actor->GetEquippedEntryData(true)->GetEnchantment();
 
@@ -147,7 +149,7 @@ namespace ActorEvents {
 			auto* rightWeap = rightForm ? rightForm->As<RE::TESObjectWEAP>() : nullptr;
 			auto* leftForm = eventActor->GetEquippedObject(true);
 			auto* leftWeap = leftForm ? leftForm->As<RE::TESObjectWEAP>() : nullptr;
-			EvaluateActor(eventActor, leftWeap, rightWeap, true);
+			EvaluateActor(eventActor, leftWeap, rightWeap);
 		}
 		return func(arg1, arg2, arg3, arg4);
 	}
@@ -159,7 +161,7 @@ namespace ActorEvents {
 			auto* rightWeap = rightForm ? rightForm->As<RE::TESObjectWEAP>() : nullptr;
 			auto* leftForm = eventActor->GetEquippedObject(true);
 			auto* leftWeap = leftForm ? leftForm->As<RE::TESObjectWEAP>() : nullptr;
-			EvaluateActor(eventActor, leftWeap, rightWeap, false);
+			EvaluateActor(eventActor, leftWeap, rightWeap);
 		}
 		return func(arg1, arg2, arg3, arg4);
 	}

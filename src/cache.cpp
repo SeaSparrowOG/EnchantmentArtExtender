@@ -403,6 +403,25 @@ namespace Cache {
 		return true;
 	}
 
+	bool StoredData::Start() {
+		if (KID == nullptr) {
+			_loggerInfo("KID not present, builing Cache asap.");
+			this->InitiateCache();
+		}
+		else {
+			KID = GetModuleHandle(L"po3_KeywordItemDistributor.dll");
+			if (KID == nullptr) {
+				_loggerInfo("Failed to resolve module handle, building cache.");
+				this->InitiateCache();
+				return true;
+			}
+
+			SKSE::GetModCallbackEventSource()->AddEventSink(GetSingleton());
+		}
+
+		return true;
+	}
+
 	bool Cache::StoredData::InitiateCache() {
 		Settings::BuildIni();
 		ApplyINISettings();
@@ -532,6 +551,16 @@ namespace Cache {
 				}
 			}
 		}
+
+		return true;
+	}
+
+	RE::BSEventNotifyControl StoredData::ProcessEvent(const SKSE::ModCallbackEvent* a_event, RE::BSTEventSource<SKSE::ModCallbackEvent>*) {
+		if (a_event && a_event->eventName == "KID_KeywordDistributionDone") {
+			_loggerInfo("KID finished distribution, building cache.");
+			this->InitiateCache();
+		}
+		return RE::BSEventNotifyControl::kContinue;
 	}
 
 	bool Cache::StoredData::GetShouldAddLight() { return this->shouldAddLights; }

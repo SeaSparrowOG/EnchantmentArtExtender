@@ -39,8 +39,12 @@ namespace Cache {
 	The actual cache. It stores settings in the INI files and any configuration files
 	present. Built when the data loads.
 	*/
-	class StoredData : public clib_util::singleton::ISingleton<StoredData> {
+	class StoredData : 
+		public clib_util::singleton::ISingleton<StoredData>,
+		public RE::BSTEventSink<SKSE::ModCallbackEvent> {
 	public:
+		
+		bool           Start();
 		bool           InitiateCache();
 		bool           GetShouldAddLight();
 		swapDataVector GetMatchingSwaps(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment);
@@ -81,5 +85,8 @@ namespace Cache {
 		* @return Nothing.
 		*/
 		void DebugSwaps();
+
+		inline static HMODULE KID{ nullptr };
+		RE::BSEventNotifyControl ProcessEvent(const SKSE::ModCallbackEvent* a_event, RE::BSTEventSource<SKSE::ModCallbackEvent>*) override;
 	};
 }
