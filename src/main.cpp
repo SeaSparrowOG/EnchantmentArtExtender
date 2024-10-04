@@ -56,8 +56,7 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() {
         auto messaging = SKSE::GetMessagingInterface();
         messaging->RegisterListener(MessageHandler);
 
-        ActorEvents::PlayShader::Install();
-        ActorEvents::ClearShader::Install();
+        ActorEvents::Install();
         _loggerInfo("Installed hooks");
         return true;
     }

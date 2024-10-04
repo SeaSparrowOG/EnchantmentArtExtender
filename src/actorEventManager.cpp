@@ -142,27 +142,22 @@ namespace {
 
 namespace ActorEvents {
 
-	void PlayShader::thunk(void* arg1, RE::ActorMagicCaster* arg2, void* arg3, void* arg4) {
-		if (arg2 && arg2->GetCasterAsActor()) {
-			auto* eventActor = arg2->GetCasterAsActor();
-			auto* rightForm = eventActor->GetEquippedObject(false);
-			auto* rightWeap = rightForm ? rightForm->As<RE::TESObjectWEAP>() : nullptr;
-			auto* leftForm = eventActor->GetEquippedObject(true);
-			auto* leftWeap = leftForm ? leftForm->As<RE::TESObjectWEAP>() : nullptr;
-			EvaluateActor(eventActor, leftWeap, rightWeap);
-		}
-		return func(arg1, arg2, arg3, arg4);
+	void Install()
+	{
+		Init::Install();
+		Attach::Install();
+		_loggerInfo("Installed listeners");
 	}
 
-	void  ClearShader::thunk(RE::ActorMagicCaster* arg1, bool arg2, void* arg3, void* arg4) {
-		if (arg1 && arg1->GetCasterAsActor()) {
-			auto* eventActor = arg1->GetCasterAsActor();
-			auto* rightForm = eventActor->GetEquippedObject(false);
-			auto* rightWeap = rightForm ? rightForm->As<RE::TESObjectWEAP>() : nullptr;
-			auto* leftForm = eventActor->GetEquippedObject(true);
-			auto* leftWeap = leftForm ? leftForm->As<RE::TESObjectWEAP>() : nullptr;
-			EvaluateActor(eventActor, leftWeap, rightWeap);
-		}
-		return func(arg1, arg2, arg3, arg4);
+	bool Init::thunk(RE::ShaderReferenceEffect* a_this)
+	{
+		_loggerInfo("Hook - Init");
+		return func(a_this);
+	}
+
+	bool Attach::thunk(RE::ShaderReferenceEffect* a_this)
+	{
+		_loggerInfo("Hook - Resume");
+		return func(a_this);
 	}
 }

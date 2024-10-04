@@ -39,14 +39,14 @@ namespace stl {
     constexpr auto write_vfunc() noexcept
     {
         REL::Relocation<std::uintptr_t> vtbl{ TDest::VTABLE[0] };
-        TSource::func = vtbl.write_vfunc(TSource::idx, TSource::Thunk);
+        TSource::func = vtbl.write_vfunc(TSource::idx, TSource::thunk);
     }
 
     template <typename T>
     constexpr auto write_vfunc(const REL::ID variant_id) noexcept
     {
         REL::Relocation<std::uintptr_t> vtbl{ variant_id };
-        T::func = vtbl.write_vfunc(T::idx, T::Thunk);
+        T::func = vtbl.write_vfunc(T::idx, T::thunk);
     }
 
     template <typename R, typename... Args>
