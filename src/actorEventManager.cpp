@@ -25,6 +25,7 @@ namespace {
 		float blue = 255.0f;
 
 		bool drawn = a_actor->IsWeaponDrawn();
+		_loggerInfo("Drawn: {}", drawn);
 
 		if (drawn && a_rightWeapon && !a_rightWeapon->IsBound()) {
 			auto* enchantment = a_rightWeapon->formEnchanting;
@@ -145,19 +146,35 @@ namespace ActorEvents {
 	void Install()
 	{
 		Init::Install();
-		Attach::Install();
+		ClearShader::Install();
 		_loggerInfo("Installed listeners");
 	}
 
-	bool Init::thunk(RE::ShaderReferenceEffect* a_this)
+	void Init::thunk(RE::ShaderReferenceEffect* a_this)
 	{
-		_loggerInfo("Hook - Init");
-		return func(a_this);
+		auto* controller = a_this->controller;
+		auto* reference = controller ? controller->GetTargetReference() : nullptr;
+		auto* actor = reference ? reference->As<RE::Actor>() : nullptr;
+		if (actor) {
+			auto* left = actor->GetEquippedObject(true);
+			auto* right = actor->GetEquippedObject(false);
+			auto* leftWeapon = left ? left->As<RE::TESObjectWEAP>() : nullptr;
+			auto* rightWeapon = right ? right->As<RE::TESObjectWEAP>() : nullptr;
+			EvaluateActor(actor, leftWeapon, rightWeapon);
+		}
+		func(a_this);
 	}
 
-	bool Attach::thunk(RE::ShaderReferenceEffect* a_this)
+	void ClearShader::thunk(RE::ActorMagicCaster* a_this, bool arg2, void* arg3, void* arg4)
 	{
-		_loggerInfo("Hook - Resume");
-		return func(a_this);
+		auto* actor = a_this ? a_this->GetCasterAsActor() : nullptr;
+		if (actor) {
+			auto* left = actor->GetEquippedObject(true);
+			auto* right = actor->GetEquippedObject(false);
+			auto* leftWeapon = left ? left->As<RE::TESObjectWEAP>() : nullptr;
+			auto* rightWeapon = right ? right->As<RE::TESObjectWEAP>() : nullptr;
+			EvaluateActor(actor, leftWeapon, rightWeapon);
+		}
+		func(a_this, arg2, arg3, arg4);
 	}
 }

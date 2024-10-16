@@ -9,21 +9,26 @@ namespace ActorEvents {
 			return true;
 		}
 
-		static bool thunk(RE::ShaderReferenceEffect* a_this);
+		static void thunk(RE::ShaderReferenceEffect* a_this);
 		inline static REL::Relocation<decltype(Init::thunk)> func;
-		static constexpr std::size_t idx{ 54 };
+		static constexpr std::size_t idx{ 54 }; //0x36
 	};
 
-	struct Attach
+	struct ClearShader
 	{
 		static bool Install() {
-			stl::write_vfunc<RE::ShaderReferenceEffect, Attach>();
+			SKSE::AllocTrampoline(14);
+			REL::Relocation<std::uintptr_t> target{ REL::ID(38784), 0xB1 };
+
+			auto& trampoline = SKSE::GetTrampoline();
+			func = trampoline.write_call<5>(target.address(), thunk);
 			return true;
 		}
 
-		static bool thunk(RE::ShaderReferenceEffect* a_this);
-		inline static REL::Relocation<decltype(Attach::thunk)> func;
-		static constexpr std::size_t idx{ 57 };
+		static void thunk(RE::ActorMagicCaster* a_this, bool arg2, void* arg3, void* arg4);
+
+		inline static REL::Relocation<decltype(ClearShader::thunk)> func;
+		static constexpr std::size_t idx{ 57 }; //0x37
 	};
 
 	void Install();
