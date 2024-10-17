@@ -177,4 +177,34 @@ namespace ActorEvents {
 		}
 		func(a_this, arg2, arg3, arg4);
 	}
+
+	bool EquipEventHandler::RegisterListener()
+	{
+		auto* eventHolder = RE::ScriptEventSourceHolder::GetSingleton();
+		if (!eventHolder) {
+			_loggerInfo("Failed to get the Event Holder, aborting load...");
+			return false;
+		}
+
+		eventHolder->AddEventSink(this);
+		return true;
+	}
+
+	RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>* a_eventSource)
+	{
+		using continueEvent = RE::BSEventNotifyControl;
+
+		if (!a_event || !a_eventSource) return continueEvent::kContinue;
+
+		auto reference = a_event->actor;
+		auto* actor = a_event ? reference->As<RE::Actor>() : nullptr;
+		if (!actor) return continueEvent::kContinue;
+
+		auto* left = actor->GetEquippedObject(true);
+		auto* right = actor->GetEquippedObject(false);
+		auto* leftWeapon = left ? left->As<RE::TESObjectWEAP>() : nullptr;
+		auto* rightWeapon = right ? right->As<RE::TESObjectWEAP>() : nullptr;
+		EvaluateActor(actor, leftWeapon, rightWeapon);
+		return continueEvent::kContinue;
+	}
 }
