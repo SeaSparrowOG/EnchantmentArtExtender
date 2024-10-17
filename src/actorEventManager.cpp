@@ -3,13 +3,13 @@
 
 namespace {
 	bool SpellVectorContainsElement(RE::SpellItem* a_spell, std::vector<RE::SpellItem*>* a_vec) {
-		for (auto* spell : *a_vec) {
+		for (const auto* spell : *a_vec) {
 			if (a_spell == spell) return true;
 		}
 		return false;
 	}
 
-	void EvaluateActor(RE::Actor* a_actor, RE::TESObjectWEAP* a_leftWeapon, RE::TESObjectWEAP* a_rightWeapon) {
+	void EvaluateActor(RE::Actor* a_actor, bool drawn) {
 		if (!a_actor) return;
 		//New guard for paused menus
 		if (RE::UI::GetSingleton()->GameIsPaused()) return;
@@ -24,15 +24,17 @@ namespace {
 		float green = 255.0f;
 		float blue = 255.0f;
 
-		bool drawn = a_actor->IsWeaponDrawn();
-		_loggerInfo("Drawn: {}", drawn);
-
+		auto* right = a_actor->GetEquippedEntryData(false);
+		auto* left = a_actor->GetEquippedEntryData(true);
+#undef GetObject
+		auto* a_rightWeapon = right ? right->GetObject()->As<RE::TESObjectWEAP>() : nullptr;
+		auto* a_leftWeapon = left ? left->GetObject()->As<RE::TESObjectWEAP>() : nullptr;
 		if (drawn && a_rightWeapon && !a_rightWeapon->IsBound()) {
 			auto* enchantment = a_rightWeapon->formEnchanting;
 			if (!enchantment) enchantment = a_actor->GetEquippedEntryData(false)->GetEnchantment();
 
-			auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(a_rightWeapon, enchantment);
-			for (auto& swap : swaps) {
+			const auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(a_rightWeapon, enchantment);
+			for (const auto& swap : swaps) {
 				auto* spell = swap.rightAbility;
 				if (!SpellVectorContainsElement(spell, &abilities)) {
 					if (Cache::StoredData::GetSingleton()->GetShouldAddLight()) {
@@ -67,8 +69,8 @@ namespace {
 			auto* enchantment = a_leftWeapon->formEnchanting;
 			if (!enchantment) enchantment = a_actor->GetEquippedEntryData(true)->GetEnchantment();
 
-			auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(a_leftWeapon, enchantment);
-			for (auto& swap : swaps) {
+			const auto swaps = Cache::StoredData::GetSingleton()->GetMatchingSwaps(a_leftWeapon, enchantment);
+			for (const auto& swap : swaps) {
 				auto* spell = swap.leftAbility;
 				if (!SpellVectorContainsElement(spell, &abilities)) {
 					if (Cache::StoredData::GetSingleton()->GetShouldAddLight()) {
@@ -142,69 +144,15 @@ namespace {
 }
 
 namespace ActorEvents {
-
-	void Install()
-	{
-		Init::Install();
-		ClearShader::Install();
-		_loggerInfo("Installed listeners");
+	void Install() {
+		DrawWeaponMagicHands::Install();
 	}
 
-	void Init::thunk(RE::ShaderReferenceEffect* a_this)
+	void DrawWeaponMagicHands::thunk(RE::Actor* a_this, bool a_draw)
 	{
-		auto* controller = a_this->controller;
-		auto* reference = controller ? controller->GetTargetReference() : nullptr;
-		auto* actor = reference ? reference->As<RE::Actor>() : nullptr;
-		if (actor) {
-			auto* left = actor->GetEquippedObject(true);
-			auto* right = actor->GetEquippedObject(false);
-			auto* leftWeapon = left ? left->As<RE::TESObjectWEAP>() : nullptr;
-			auto* rightWeapon = right ? right->As<RE::TESObjectWEAP>() : nullptr;
-			EvaluateActor(actor, leftWeapon, rightWeapon);
+		if (a_this) {
+			EvaluateActor(a_this, a_draw);
 		}
-		func(a_this);
-	}
-
-	void ClearShader::thunk(RE::ActorMagicCaster* a_this, bool arg2, void* arg3, void* arg4)
-	{
-		auto* actor = a_this ? a_this->GetCasterAsActor() : nullptr;
-		if (actor) {
-			auto* left = actor->GetEquippedObject(true);
-			auto* right = actor->GetEquippedObject(false);
-			auto* leftWeapon = left ? left->As<RE::TESObjectWEAP>() : nullptr;
-			auto* rightWeapon = right ? right->As<RE::TESObjectWEAP>() : nullptr;
-			EvaluateActor(actor, leftWeapon, rightWeapon);
-		}
-		func(a_this, arg2, arg3, arg4);
-	}
-
-	bool EquipEventHandler::RegisterListener()
-	{
-		auto* eventHolder = RE::ScriptEventSourceHolder::GetSingleton();
-		if (!eventHolder) {
-			_loggerInfo("Failed to get the Event Holder, aborting load...");
-			return false;
-		}
-
-		eventHolder->AddEventSink(this);
-		return true;
-	}
-
-	RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent* a_event, RE::BSTEventSource<RE::TESEquipEvent>* a_eventSource)
-	{
-		using continueEvent = RE::BSEventNotifyControl;
-
-		if (!a_event || !a_eventSource) return continueEvent::kContinue;
-
-		auto reference = a_event->actor;
-		auto* actor = a_event ? reference->As<RE::Actor>() : nullptr;
-		if (!actor) return continueEvent::kContinue;
-
-		auto* left = actor->GetEquippedObject(true);
-		auto* right = actor->GetEquippedObject(false);
-		auto* leftWeapon = left ? left->As<RE::TESObjectWEAP>() : nullptr;
-		auto* rightWeapon = right ? right->As<RE::TESObjectWEAP>() : nullptr;
-		EvaluateActor(actor, leftWeapon, rightWeapon);
-		return continueEvent::kContinue;
+		func(a_this, a_draw);
 	}
 }

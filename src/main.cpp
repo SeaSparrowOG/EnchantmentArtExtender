@@ -27,7 +27,6 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message) {
     switch (a_message->type) {
     case SKSE::MessagingInterface::kDataLoaded:
         Cache::StoredData::GetSingleton()->Start();
-        ActorEvents::EquipEventHandler::GetSingleton()->RegisterListener();
         break;
     default:
         break;
