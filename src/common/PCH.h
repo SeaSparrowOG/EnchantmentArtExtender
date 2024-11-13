@@ -6,24 +6,18 @@
 #include <fstream>
 #include <spdlog/sinks/basic_file_sink.h>
 
-#include <ClibUtil/simpleINI.hpp>
-#include <ClibUtil/singleton.hpp>
-#include <ClibUtil/distribution.hpp>
-#include <ClibUtil/editorID.hpp>
-
 #include <json/json.h>
+
+#include "Plugin.h"
 
 #define DLLEXPORT __declspec(dllexport)
 
+namespace logger = SKSE::log;
 using namespace std::literals;
-using namespace clib_util::singleton;
-
-#include "Version.h"
-
-#define _loggerInfo SKSE::log::info
-#define _1_6_1170 (unsigned short)1U, (unsigned short)6U, (unsigned short)1170U, (unsigned short)0U
-
-#define _debugEDID clib_util::editorID::get_editorID
+namespace util
+{
+    using SKSE::stl::report_and_fail;
+}
 
 namespace stl {
     template <class T>

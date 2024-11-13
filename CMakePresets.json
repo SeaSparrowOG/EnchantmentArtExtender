@@ -67,7 +67,10 @@
         "windows",
         "vs2022",
         "test"
-      ]
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     }
   ],
   "buildPresets": [
@@ -79,7 +82,7 @@
     {
       "name": "Test",
       "configurePreset": "vs2022-windows-vcpkg-test",
-      "configuration": "Release"
+      "configuration": "Debug"
     }
   ]
 }

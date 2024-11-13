@@ -1,21 +1,17 @@
 {
-  "name": "rainextinguishesfires",
-  "version-string": "5.0.0",
-  "description": "Manages Fire Extinguishing For Skyrim",
+  "name": "enchantmentartextender",
+  "version-string": "2.0.0",
+  "description": "SKSE framework for attaching light and effects to enchanted weapons based on rules.",
   "homepage": "",
   "license": "MIT",
   "dependencies": [
+    "fmt",
     "rsm-binary-io",
     "spdlog",
     "clib-util",
     "jsoncpp",
+    "simpleini",
     "xbyak"
   ],
-  "overrides": [
-    {
-      "name": "fmt",
-      "version": "9.1.0"
-    }
-  ],
-  "builtin-baseline": "b7dba7f9aad09a56900f21cd78cfda1258e54e38"
+  "builtin-baseline": "ea295dff0b3e9e9caeb49d1225dc7272d3231cf1"
 }
