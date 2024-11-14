@@ -49,6 +49,25 @@ set_target_properties(CommonLibSSE PROPERTIES
 	FOLDER External
 )
 
+set(DATA_DIR "${PROJECT_SOURCE_DIR}/data")
+
+install(
+	FILES "${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender.ini"
+	DESTINATION "SKSE/Plugins"
+)
+
+install(
+	FILES "${DATA_DIR}/EnchantmentArtExtender.bsa"
+	DESTINATION "."
+)
+
+install(
+	FILES "${DATA_DIR}/EnchantmentArtExtender.esl"
+	DESTINATION "."
+)
+
+include(components.cmake)
+
 # ---- Post build ----
 if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
 	if(BUILD_TEST)
