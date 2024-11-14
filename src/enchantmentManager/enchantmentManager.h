@@ -6,7 +6,11 @@ namespace EnchantmentManager
 {
 	class Manager : public Utilities::Singleton::ISingleton<Manager> {
 	public:
-		void ProcessActor(RE::Actor* a_actor, bool a_clear);
+		RE::BGSArtObject* GetBestMatchingArt(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment);
+		void AddWeaponCondition(bool a_inverted, const std::vector<RE::TESObjectWEAP*>& a_weapons);
+		void AddWeaponKeywordCondition(bool a_inverted, const std::vector<std::string_view>& a_keywords);
+		void AddEnchantmentCondition(const std::vector<std::string_view>& a_keywords);
+		void ReleaseNewCondition(bool a_matchAll, RE::BGSArtObject* a_artObject);
 
 	private:
 		enum Priority {
@@ -14,46 +18,67 @@ namespace EnchantmentManager
 			kHigh
 		};
 
-		struct Condition {
-			virtual bool IsApplicable(RE::InventoryEntryData* a_data) const = 0;
-
+		class Condition {
+		public:
+			virtual bool IsApplicable(RE::TESObjectWEAP* a_data) const = 0;
 			bool inverted;
-			int weight;
-			Priority priority;
 		};
 
-		struct WeaponCondition : public Condition{
-			bool IsApplicable(RE::InventoryEntryData* a_data) const override;
+		class WeaponCondition : public Condition {
+		public:
+			bool IsApplicable(RE::TESObjectWEAP* a_data) const override;
+			std::vector<RE::TESObjectWEAP*> weapons;
 
 			WeaponCondition() {
-				priority = kHigh;
+				weapons = std::vector<RE::TESObjectWEAP*>();
 			}
-			bool inverted;
 		};
 
-		struct WeaponKeywordCondition : public Condition {
-			bool IsApplicable(RE::InventoryEntryData* a_data) const override;
+		class WeaponKeywordCondition : public Condition {
+		public:
+			bool IsApplicable(RE::TESObjectWEAP* a_data) const override;
+			std::vector<std::string_view> keywords;
 
 			WeaponKeywordCondition() {
-				priority = kLow;
+				keywords = std::vector<std::string_view>();
 			}
-			std::vector<std::string_view> keywords;
 		};
 
-		struct EnchantmentKeywordCondition {
+		class EnchantmentKeywordCondition {
+		public:
 			bool IsApplicable(RE::EnchantmentItem* a_data) const;
-
 			std::vector<std::string_view> keywords;
+
+			EnchantmentKeywordCondition() {
+				keywords = std::vector<std::string_view>();
+			}
 		};
 
-		struct ConditionalArt {
-			bool IsApplicable(RE::EnchantmentItem* a_enchantment, RE::TESObjectWEAP* a_weapon);
-
+		class ConditionalArt {
+		public:
+			int weight;
 			bool matchAll;
+			Priority priority;
 			RE::BGSArtObject* artObject;
-			std::vector<Condition> conditions;
+			std::vector<std::unique_ptr<Condition>> conditions;
+			EnchantmentKeywordCondition enchantmentCondition;
+
+			ConditionalArt() {
+				weight = 0;
+				matchAll = false;
+				priority = Priority::kLow;
+				artObject = nullptr;
+				conditions = std::vector<std::unique_ptr<Condition>>();
+				enchantmentCondition = EnchantmentKeywordCondition();
+			}
 		};
 
 		std::vector<ConditionalArt> storedArt;
+
+		EnchantmentKeywordCondition tempEnchantmentKeywordCondition;
+		WeaponKeywordCondition tempKeywordConditions;
+		WeaponCondition tempWeaponCondition;
+		WeaponKeywordCondition tempKeywordConditionsInverted;
+		WeaponCondition tempWeaponConditionInverted;
 	};
 }
