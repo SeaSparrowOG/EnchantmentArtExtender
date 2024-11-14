@@ -14,19 +14,17 @@ namespace Hooks {
 		RE::MagicItem* a_enchantment)
 	{
 		const auto response = _attachArt(a_this, a_magicCaster, a_caster, a_enchantment);
-		const auto enchantment = a_enchantment ? a_enchantment->As<RE::EnchantmentItem>() : nullptr;
-		const auto attachRoot = response->GetAttachRoot();
-		const auto attachRootName = attachRoot ? attachRoot->name : "";
-		bool isLeft = attachRootName.contains("Shield");
-		const auto equippedObject = a_caster->GetEquippedObject(isLeft);
-		const auto weap = equippedObject ? equippedObject->As<RE::TESObjectWEAP>() : nullptr;
-		logger::debug("WEAP: {}\n  >Root: {}", weap ? weap->GetName() : "NULL", attachRootName.c_str());
-		if (enchantment && weap) {
-			logger::debug("Requesting new art");
-			const auto newArt = EnchantmentManager::Manager::GetSingleton()->GetBestMatchingArt(weap, enchantment);
-			if (newArt) {
-				response->artObject = newArt;
-			}
+		if (response->artObject) {
+			return response;
+		}
+
+		const auto left = a_magicCaster->castingSource == RE::MagicSystem::CastingSource::kLeftHand;
+		const auto entry = a_caster->GetEquippedEntryData(left);
+		const auto weap = entry && entry->object ? entry->object->As<RE::TESObjectWEAP>() : nullptr;
+		const auto enchantment = entry ? entry->GetEnchantment() : nullptr;
+		if (weap && enchantment) {
+			const auto art = EnchantmentManager::Manager::GetSingleton()->GetBestMatchingArt(weap, enchantment);
+			response->artObject = art;
 		}
 		return response;
 	}

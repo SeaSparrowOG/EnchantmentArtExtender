@@ -88,7 +88,7 @@ namespace Settings::JSON
 				std::vector<std::string> newEnchantmentKeywords = std::vector<std::string>();
 				for (auto& entry : enchantmentKeywords) {
 					if (!entry.isString()) {
-						logger::warn("Warning: <{}> - <{}> contains non string entry for enchantmentKeywords.", path, weaponArt.asString());
+						logger::warn("<{}> - <{}> contains non string entry for enchantmentKeywords.", path, weaponArt.asString());
 						hasBadEnchantmentKeyword = true;
 						break;
 					}

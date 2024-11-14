@@ -27,12 +27,10 @@ namespace EnchantmentManager
 
 	bool Manager::WeaponKeywordCondition::IsApplicable(RE::TESObjectWEAP* a_data) const
 	{
-		bool matchedAllKeywords = true;
-		logger::debug("Data:{}", a_data ? a_data->GetName() : "NULL");
 		for (const auto& internalForm : keywords) {
 			if (!a_data->HasKeywordString(internalForm)) {
 				if (!inverted) {
-					matchedAllKeywords = false;
+					return false;
 				}
 			}
 			else {
@@ -41,14 +39,13 @@ namespace EnchantmentManager
 				}
 			}
 		}
-		return matchedAllKeywords;
+		return true;
 	}
 
 	bool Manager::EnchantmentKeywordCondition::IsApplicable(RE::EnchantmentItem* a_data) const
 	{
 		for (const auto& keywordString : keywords) {
 			bool found = false;
-			logger::debug("Looking for {}", keywordString);
 			for (const auto& effect : a_data->effects) {
 				if (effect->baseEffect ? effect->baseEffect->HasKeywordString(keywordString) : false) {
 					found = true;
@@ -57,11 +54,9 @@ namespace EnchantmentManager
 			}
 
 			if (!found) {
-				logger::debug("NOt found");
 				return false;
 			}
 		}
-		logger::debug("Enchantment is valid");
 		return true;
 	}
 
@@ -114,27 +109,40 @@ namespace EnchantmentManager
 		temp.enchantmentCondition = EnchantmentKeywordCondition();
 		temp.enchantmentCondition.keywords = a_enchantmentKeywords;
 
-		auto newWeaponCondition = WeaponCondition();
-		newWeaponCondition.weapons = a_weapons;
-		auto newWeapons = std::make_unique<WeaponCondition>(newWeaponCondition);
+		int newWeight = 0;
+		if (!a_weapons.empty()) {
+			newWeight++;
+			auto newWeaponCondition = WeaponCondition();
+			newWeaponCondition.weapons = a_weapons;
+			auto newWeapons = std::make_unique<WeaponCondition>(newWeaponCondition);
+			temp.conditions.push_back(std::move(newWeapons));
+		}
 
-		auto newReverseWeaponCondition = WeaponCondition();
-		newReverseWeaponCondition.weapons = a_excludedWeapons;
-		auto excludedWeapons = std::make_unique<WeaponCondition>(newReverseWeaponCondition);
+		if (!a_excludedWeapons.empty()) {
+			auto newReverseWeaponCondition = WeaponCondition();
+			newReverseWeaponCondition.inverted = true;
+			newReverseWeaponCondition.weapons = a_excludedWeapons;
+			auto excludedWeapons = std::make_unique<WeaponCondition>(newReverseWeaponCondition);
+			temp.conditions.push_back(std::move(excludedWeapons));
+		}
 
-		auto newWeaponKeywordCondition = WeaponKeywordCondition();
-		newWeaponKeywordCondition.keywords = a_weaponKeywords;
-		auto newKeywords = std::make_unique<WeaponKeywordCondition>(newWeaponKeywordCondition);
+		if (!a_weaponKeywords.empty()) {
+			newWeight += a_weaponKeywords.size();
+			auto newWeaponKeywordCondition = WeaponKeywordCondition();
+			newWeaponKeywordCondition.keywords = a_weaponKeywords;
+			auto newKeywords = std::make_unique<WeaponKeywordCondition>(newWeaponKeywordCondition);
+			temp.conditions.push_back(std::move(newKeywords));
+		}
 
-		auto newExcludedWeaponKeywords = WeaponKeywordCondition();
-		newExcludedWeaponKeywords.keywords = a_excludedWeaponKeywords;
-		auto newExcludedKeywords = std::make_unique<WeaponKeywordCondition>(newExcludedWeaponKeywords);
+		if (!a_excludedWeaponKeywords.empty()) {
+			auto newExcludedWeaponKeywords = WeaponKeywordCondition();
+			newExcludedWeaponKeywords.inverted = true;
+			newExcludedWeaponKeywords.keywords = a_excludedWeaponKeywords;
+			auto newExcludedKeywords = std::make_unique<WeaponKeywordCondition>(newExcludedWeaponKeywords);
+			temp.conditions.push_back(std::move(newExcludedKeywords));
+		}
 
-		temp.conditions.push_back(std::move(newWeapons));
-		temp.conditions.push_back(std::move(excludedWeapons));
-		temp.conditions.push_back(std::move(newKeywords));
-		temp.conditions.push_back(std::move(newExcludedKeywords));
-
+		temp.weight = newWeight;
 		storedArt.push_back(std::move(temp));
 	}
 }
