@@ -8,8 +8,7 @@ install(
 
 install(
 	FILES
-		"${DATA_DIR}/EnchantmentArtExtender.esp"
-	DESTINATION "ReleaseBuild"
+		"${DATA_DIR}/EnchantmentArtExtender.esl"
 	DESTINATION "."
 	COMPONENT components
 	EXCLUDE_FROM_ALL
@@ -18,7 +17,6 @@ install(
 install(
 	FILES
 		"${DATA_DIR}/EnchantmentArtExtender.bsa"
-	DESTINATION "ReleaseBuild"
 	DESTINATION "."
 	COMPONENT components
 	EXCLUDE_FROM_ALL

@@ -53,5 +53,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ConsiderateFollowers
+        name: EnchantmentArtExtender
         path: ${{ github.workspace }}/ReleaseBuild

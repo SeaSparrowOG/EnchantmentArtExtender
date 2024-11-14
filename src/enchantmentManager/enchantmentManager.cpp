@@ -68,9 +68,11 @@ namespace EnchantmentManager
 
 
 		for (const auto& art : storedArt) {
+#if 0
 			if (hasHighPriority && lastWeight > art.weight) {
 				return bestMatchingArt;
 			}
+#endif
 			if (hasHighPriority && art.priority == Priority::kLow) {
 				continue;
 			}
