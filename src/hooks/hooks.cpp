@@ -1,6 +1,7 @@
 #include "Hooks/hooks.h"
 
 #include "enchantmentManager/enchantmentManager.h"
+#include "Settings/INISettings.h"
 
 namespace Hooks {
 	void Install()
@@ -25,6 +26,13 @@ namespace Hooks {
 		if (weap && enchantment) {
 			const auto art = EnchantmentManager::Manager::GetSingleton()->GetBestMatchingArt(weap, enchantment);
 			response->artObject = art;
+
+			if (art) {
+				const auto settingsSingleton = Settings::INI::SettingsHolder::GetSingleton();
+				if (const auto emptyShader = settingsSingleton->GetEmptyShader()) {
+					response->effectShader = emptyShader;
+				}
+			}
 		}
 		return response;
 	}

@@ -1,6 +1,7 @@
 #include "hooks/hooks.h"
 
 #include "Settings/INISettings.h"
+#include "Settings/INISettings.h"
 #include "Settings/JSONSettings.h"
 
 namespace
@@ -67,6 +68,7 @@ static void MessageEventCallback(SKSE::MessagingInterface::Message* a_msg)
 	switch (a_msg->type) {
 	case SKSE::MessagingInterface::kDataLoaded:
 		Settings::JSON::Read();
+		Settings::INI::SettingsHolder::GetSingleton()->Read();
 		break;
 	default:
 		break;
