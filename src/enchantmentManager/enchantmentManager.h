@@ -6,11 +6,15 @@ namespace EnchantmentManager
 {
 	class Manager : public Utilities::Singleton::ISingleton<Manager> {
 	public:
-		RE::BGSArtObject* GetBestMatchingArt(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment);
-		void AddWeaponCondition(bool a_inverted, const std::vector<RE::TESObjectWEAP*>& a_weapons);
-		void AddWeaponKeywordCondition(bool a_inverted, const std::vector<std::string_view>& a_keywords);
-		void AddEnchantmentCondition(const std::vector<std::string_view>& a_keywords);
-		void ReleaseNewCondition(bool a_matchAll, RE::BGSArtObject* a_artObject);
+		RE::BGSArtObject* GetBestMatchingArt(RE::TESObjectWEAP* a_actor, RE::EnchantmentItem* a_enchantment);
+		void CreateNewData(
+			RE::BGSArtObject* a_enchantmentArt,
+			std::vector<std::string> a_enchantmentKeywords,
+			std::vector<std::string> a_weaponKeywords,
+			std::vector<std::string> a_excludedWeaponKeywords,
+			std::vector<RE::TESObjectWEAP*> a_weapons,
+			std::vector<RE::TESObjectWEAP*> a_excludedWeapons
+		);
 
 	private:
 		enum Priority {
@@ -37,20 +41,20 @@ namespace EnchantmentManager
 		class WeaponKeywordCondition : public Condition {
 		public:
 			bool IsApplicable(RE::TESObjectWEAP* a_data) const override;
-			std::vector<std::string_view> keywords;
+			std::vector<std::string> keywords;
 
 			WeaponKeywordCondition() {
-				keywords = std::vector<std::string_view>();
+				keywords = std::vector<std::string>();
 			}
 		};
 
 		class EnchantmentKeywordCondition {
 		public:
 			bool IsApplicable(RE::EnchantmentItem* a_data) const;
-			std::vector<std::string_view> keywords;
+			std::vector<std::string> keywords;
 
 			EnchantmentKeywordCondition() {
-				keywords = std::vector<std::string_view>();
+				keywords = std::vector<std::string>();
 			}
 		};
 
@@ -74,11 +78,5 @@ namespace EnchantmentManager
 		};
 
 		std::vector<ConditionalArt> storedArt;
-
-		EnchantmentKeywordCondition tempEnchantmentKeywordCondition;
-		WeaponKeywordCondition tempKeywordConditions;
-		WeaponCondition tempWeaponCondition;
-		WeaponKeywordCondition tempKeywordConditionsInverted;
-		WeaponCondition tempWeaponConditionInverted;
 	};
 }

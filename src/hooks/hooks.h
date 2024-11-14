@@ -16,7 +16,7 @@ namespace Hooks {
 
 	private:
 		static RE::WeaponEnchantmentController* AttachArt(
-			RE::ReferenceEffectController* a_speaker,
+			RE::WeaponEnchantmentController* a_speaker,
 			RE::ActorMagicCaster* a_magicCaster,
 			RE::Actor* a_caster,
 			RE::MagicItem* a_enchantment);

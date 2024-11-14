@@ -1,5 +1,8 @@
 #include "hooks/hooks.h"
 
+#include "Settings/INISettings.h"
+#include "Settings/JSONSettings.h"
+
 namespace
 {
 	void InitializeLog()
@@ -63,6 +66,7 @@ static void MessageEventCallback(SKSE::MessagingInterface::Message* a_msg)
 {
 	switch (a_msg->type) {
 	case SKSE::MessagingInterface::kDataLoaded:
+		Settings::JSON::Read();
 		break;
 	default:
 		break;

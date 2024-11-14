@@ -28,6 +28,7 @@ namespace EnchantmentManager
 	bool Manager::WeaponKeywordCondition::IsApplicable(RE::TESObjectWEAP* a_data) const
 	{
 		bool matchedAllKeywords = true;
+		logger::debug("Data:{}", a_data ? a_data->GetName() : "NULL");
 		for (const auto& internalForm : keywords) {
 			if (!a_data->HasKeywordString(internalForm)) {
 				if (!inverted) {
@@ -46,18 +47,30 @@ namespace EnchantmentManager
 	bool Manager::EnchantmentKeywordCondition::IsApplicable(RE::EnchantmentItem* a_data) const
 	{
 		for (const auto& keywordString : keywords) {
-			if (!a_data->HasKeywordString(keywordString)) {
+			bool found = false;
+			logger::debug("Looking for {}", keywordString);
+			for (const auto& effect : a_data->effects) {
+				if (effect->baseEffect ? effect->baseEffect->HasKeywordString(keywordString) : false) {
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				logger::debug("NOt found");
 				return false;
 			}
 		}
+		logger::debug("Enchantment is valid");
 		return true;
 	}
 
-	RE::BGSArtObject* Manager::GetBestMatchingArt( RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment)
+	RE::BGSArtObject* Manager::GetBestMatchingArt(RE::TESObjectWEAP* a_weap, RE::EnchantmentItem* a_enchantment)
 	{
 		bool hasHighPriority = false;
 		int lastWeight = 0;
 		RE::BGSArtObject* bestMatchingArt = nullptr;
+
 
 		for (const auto& art : storedArt) {
 			if (hasHighPriority && lastWeight > art.weight) {
@@ -85,7 +98,7 @@ namespace EnchantmentManager
 				lastWeight = art.weight;
 				bestMatchingArt = art.artObject;
 			}
-			else if (art.weight > lastWeight){
+			else if (art.weight > lastWeight) {
 				lastWeight = art.weight;
 				bestMatchingArt = art.artObject;
 			}
@@ -94,75 +107,34 @@ namespace EnchantmentManager
 		return bestMatchingArt;
 	}
 
-	void Manager::AddWeaponCondition(bool a_inverted, const std::vector<RE::TESObjectWEAP*>& a_weapons)
+	void Manager::CreateNewData(RE::BGSArtObject* a_enchantmentArt, std::vector<std::string> a_enchantmentKeywords, std::vector<std::string> a_weaponKeywords, std::vector<std::string> a_excludedWeaponKeywords, std::vector<RE::TESObjectWEAP*> a_weapons, std::vector<RE::TESObjectWEAP*> a_excludedWeapons)
 	{
-		if (a_inverted) {
-			tempWeaponConditionInverted.weapons = a_weapons;
-			tempWeaponConditionInverted.inverted = true;
-		}
-		else {
-			tempWeaponCondition.weapons = a_weapons;
-			tempWeaponCondition.inverted = false;
-		}
-	}
+		auto temp = ConditionalArt();
+		temp.artObject = a_enchantmentArt;
+		temp.enchantmentCondition = EnchantmentKeywordCondition();
+		temp.enchantmentCondition.keywords = a_enchantmentKeywords;
 
-	void Manager::AddWeaponKeywordCondition(bool a_inverted, const std::vector<std::string_view>& a_keywords)
-	{
-		if (a_inverted) {
-			tempKeywordConditionsInverted.keywords = a_keywords;
-			tempKeywordConditionsInverted.inverted = true;
-		}
-		else {
-			tempKeywordConditions.keywords = a_keywords;
-			tempKeywordConditions.inverted = false;
-		}
-	}
+		auto newWeaponCondition = WeaponCondition();
+		newWeaponCondition.weapons = a_weapons;
+		auto newWeapons = std::make_unique<WeaponCondition>(newWeaponCondition);
 
-	void Manager::AddEnchantmentCondition(const std::vector<std::string_view>& a_keywords)
-	{
-		tempEnchantmentKeywordCondition.keywords = a_keywords;
-	}
+		auto newReverseWeaponCondition = WeaponCondition();
+		newReverseWeaponCondition.weapons = a_excludedWeapons;
+		auto excludedWeapons = std::make_unique<WeaponCondition>(newReverseWeaponCondition);
 
-	void Manager::ReleaseNewCondition(bool a_matchAll, RE::BGSArtObject* a_artObject)
-	{
-		auto tempArt = ConditionalArt();
-		tempArt.matchAll = a_matchAll;
-		tempArt.artObject = a_artObject;
-		tempArt.enchantmentCondition = tempEnchantmentKeywordCondition;
+		auto newWeaponKeywordCondition = WeaponKeywordCondition();
+		newWeaponKeywordCondition.keywords = a_weaponKeywords;
+		auto newKeywords = std::make_unique<WeaponKeywordCondition>(newWeaponKeywordCondition);
 
-		if (tempWeaponCondition.weapons.empty()) {
-			tempArt.priority = Priority::kLow;
-		}
-		else {
-			tempArt.priority = Priority::kHigh;
-		}
+		auto newExcludedWeaponKeywords = WeaponKeywordCondition();
+		newExcludedWeaponKeywords.keywords = a_excludedWeaponKeywords;
+		auto newExcludedKeywords = std::make_unique<WeaponKeywordCondition>(newExcludedWeaponKeywords);
 
-		if (!tempWeaponCondition.weapons.empty()) {
-			auto newPtr = std::make_unique<WeaponCondition>(tempWeaponCondition);
-			tempArt.conditions.push_back(std::move(newPtr));
-		}
+		temp.conditions.push_back(std::move(newWeapons));
+		temp.conditions.push_back(std::move(excludedWeapons));
+		temp.conditions.push_back(std::move(newKeywords));
+		temp.conditions.push_back(std::move(newExcludedKeywords));
 
-		if (!tempKeywordConditions.keywords.empty()) {
-			auto newPtr = std::make_unique<WeaponKeywordCondition>(tempKeywordConditions);
-			tempArt.conditions.push_back(std::move(newPtr));
-		}
-
-		if (!tempKeywordConditionsInverted.keywords.empty()) {
-			auto newPtr = std::make_unique<WeaponKeywordCondition>(tempKeywordConditionsInverted);
-			tempArt.conditions.push_back(std::move(newPtr));
-		}
-
-		if (!tempWeaponConditionInverted.weapons.empty()) {
-			auto newPtr = std::make_unique<WeaponCondition>(tempWeaponConditionInverted);
-			tempArt.conditions.push_back(std::move(newPtr));
-		}
-
-		storedArt.push_back(std::move(tempArt));
-
-		tempEnchantmentKeywordCondition = EnchantmentKeywordCondition();
-		tempKeywordConditions = WeaponKeywordCondition();
-		tempWeaponCondition = WeaponCondition();
-		tempKeywordConditionsInverted = WeaponKeywordCondition();
-		tempWeaponConditionInverted = WeaponCondition();
+		storedArt.push_back(std::move(temp));
 	}
 }
