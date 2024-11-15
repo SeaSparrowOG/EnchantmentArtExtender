@@ -5,7 +5,7 @@ option(BUILD_TEST "Sets log level to debug." OFF)
 # -------- Project ----------
 project(
 	EnchantmentArtExtender
-	VERSION 2.0.0
+	VERSION 2.0.1
 	LANGUAGES CXX
 )
 
