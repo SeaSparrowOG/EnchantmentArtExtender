@@ -12,6 +12,8 @@ namespace Settings
 			RE::TESEffectShader* GetEmptyShader();
 			RE::TESObjectLIGH* GetLight(); //unused for now.
 
+			bool useEmptyShader{ false };
+
 		private:
 			RE::TESEffectShader* emptyShader;
 			RE::TESObjectLIGH* light;

@@ -29,7 +29,7 @@ namespace Hooks {
 
 			if (art) {
 				const auto settingsSingleton = Settings::INI::SettingsHolder::GetSingleton();
-				if (const auto emptyShader = settingsSingleton->GetEmptyShader()) {
+				if (const auto emptyShader = settingsSingleton->GetEmptyShader(); settingsSingleton->useEmptyShader && emptyShader) {
 					response->effectShader = emptyShader;
 				}
 			}

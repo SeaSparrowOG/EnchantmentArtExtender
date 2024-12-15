@@ -9,12 +9,18 @@ void Settings::INI::SettingsHolder::Read()
 	ini.SetUnicode();
 	ini.LoadFile(fmt::format(R"(.\Data\SKSE\Plugins\{}.ini)", Plugin::NAME).c_str());
 
-	std::string sEmptyShader = ini.GetValue("General", "sEmptyShader", "EnchantmentArtExtender.esl|0x800");
-	if (!sEmptyShader.empty()) {
-		const auto candidateShader = Utilities::Forms::GetFormFromString<RE::TESEffectShader>(sEmptyShader);
-		this->emptyShader = candidateShader;
+	if (ini.KeyExists("General", "sEmptyShader")) {
+		std::string sEmptyShader = ini.GetValue("General", "sEmptyShader", "EnchantmentArtExtender.esl|0x800");
+		if (!sEmptyShader.empty()) {
+			const auto candidateShader = Utilities::Forms::GetFormFromString<RE::TESEffectShader>(sEmptyShader);
+			this->emptyShader = candidateShader;
+			this->useEmptyShader = true;
+		}
 	}
-
+	else {
+		this->emptyShader = nullptr;
+		this->useEmptyShader = false;
+	}
 	std::string sLight = ini.GetValue("General", "sLight", "EnchantmentArtExtender.esl|0x801");
 	if (!sLight.empty()) {
 		const auto candidateLight = Utilities::Forms::GetFormFromString<RE::TESObjectLIGH>(sLight);
