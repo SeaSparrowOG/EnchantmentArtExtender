@@ -36,4 +36,9 @@ namespace Hooks {
 		}
 		return response;
 	}
+
+	void AttachEnchantmentVisuals::DetatchImpl(RE::ShaderReferenceEffect* a_this)
+	{
+		_detatchLight(a_this);
+	}
 }

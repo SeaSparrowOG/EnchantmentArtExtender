@@ -12,6 +12,9 @@ namespace Hooks {
 
 			REL::Relocation<std::uintptr_t> target{ REL::ID(34154), 0xDB };
 			_attachArt = trampoline.write_call<5>(target.address(), &AttachArt);
+
+			//REL::Relocation<std::uintptr_t> VTBL{ RE::ShaderReferenceEffect::VTABLE[0] };
+			//_detatchLight = VTBL.write_vfunc(0x3E, &DetatchImpl);
 		}
 
 	private:
@@ -20,7 +23,9 @@ namespace Hooks {
 			RE::ActorMagicCaster* a_magicCaster,
 			RE::Actor* a_caster,
 			RE::MagicItem* a_enchantment);
+		static void DetatchImpl(RE::ShaderReferenceEffect* a_this);
 
 		inline static REL::Relocation<decltype(&AttachArt)> _attachArt;
+		inline static REL::Relocation<decltype(&DetatchImpl)> _detatchLight;
 	};
 }

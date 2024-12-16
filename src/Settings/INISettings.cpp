@@ -14,13 +14,17 @@ void Settings::INI::SettingsHolder::Read()
 		if (!sEmptyShader.empty()) {
 			const auto candidateShader = Utilities::Forms::GetFormFromString<RE::TESEffectShader>(sEmptyShader);
 			this->emptyShader = candidateShader;
-			this->useEmptyShader = true;
+		}
+
+		if (ini.KeyExists("General", "bUseEmptyShader")) {
+			this->useEmptyShader = ini.GetBoolValue("General", "bUseEmptyShader", false);
 		}
 	}
 	else {
 		this->emptyShader = nullptr;
 		this->useEmptyShader = false;
 	}
+
 	std::string sLight = ini.GetValue("General", "sLight", "EnchantmentArtExtender.esl|0x801");
 	if (!sLight.empty()) {
 		const auto candidateLight = Utilities::Forms::GetFormFromString<RE::TESObjectLIGH>(sLight);

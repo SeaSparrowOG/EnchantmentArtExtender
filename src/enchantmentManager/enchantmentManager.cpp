@@ -68,11 +68,9 @@ namespace EnchantmentManager
 
 
 		for (const auto& art : storedArt) {
-#if 0
-			if (hasHighPriority && lastWeight > art.weight) {
-				return bestMatchingArt;
+			if (lastWeight > art.weight) {
+				continue;
 			}
-#endif
 			if (hasHighPriority && art.priority == Priority::kLow) {
 				continue;
 			}
@@ -92,13 +90,9 @@ namespace EnchantmentManager
 
 			if (!hasHighPriority && art.priority == Priority::kHigh) {
 				hasHighPriority = true;
-				lastWeight = art.weight;
-				bestMatchingArt = art.artObject;
 			}
-			else if (art.weight > lastWeight) {
-				lastWeight = art.weight;
-				bestMatchingArt = art.artObject;
-			}
+			bestMatchingArt = art.artObject;
+			lastWeight = art.weight;
 		}
 
 		return bestMatchingArt;
@@ -118,6 +112,10 @@ namespace EnchantmentManager
 			newWeaponCondition.weapons = a_weapons;
 			auto newWeapons = std::make_unique<WeaponCondition>(newWeaponCondition);
 			temp.conditions.push_back(std::move(newWeapons));
+			temp.priority = Priority::kHigh;
+		}
+		else {
+			temp.priority = Priority::kLow;
 		}
 
 		if (!a_excludedWeapons.empty()) {
