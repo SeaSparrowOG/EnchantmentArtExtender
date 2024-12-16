@@ -105,7 +105,7 @@ namespace EnchantmentManager
 		temp.enchantmentCondition = EnchantmentKeywordCondition();
 		temp.enchantmentCondition.keywords = a_enchantmentKeywords;
 
-		int newWeight = 0;
+		int newWeight = a_enchantmentKeywords.size();
 		if (!a_weapons.empty()) {
 			newWeight++;
 			auto newWeaponCondition = WeaponCondition();
