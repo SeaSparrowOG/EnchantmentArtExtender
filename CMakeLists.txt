@@ -8,7 +8,7 @@ endif()
 # -------- Project ----------
 project(
 	EnchantmentArtExtender
-	VERSION 3.0.0
+	VERSION 4.0.0
 	LANGUAGES CXX
 )
 
@@ -68,6 +68,14 @@ set_target_properties(CommonLibSSE PROPERTIES
 	FOLDER External
 )
 
+set(DATA_DIR "${PROJECT_SOURCE_DIR}/Data")
+set(SKSE_DIR "${DATA_DIR}/SKSE")
+set(SKSE_PLUGINS_DIR "${SKSE_DIR}/Plugins")
+
+set(INI_PATH "${SKSE_PLUGINS_DIR}/${PROJECT_NAME}.ini")
+set(PAPYRUS_SOURCE_DIR "${DATA_DIR}/Source/Scripts")
+set(CUSTOM_CONSOLE_DIR "${SKSE_DIR}/CustomConsole")
+
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DEBUG OFF)
 
@@ -85,11 +93,12 @@ if (MSVC)
 			
 			/wd4200                 # nonstandard extension used : zero-sized array in struct/union
 			/W4                     # More warnings 
+			/WX                     # Treat all warnings as errors
 			/external:anglebrackets # Ignore warnings for external resources.
 			/external:W0            # Same as above
 			
 			"$<$<CONFIG:DEBUG>:>"
-			"$<$<CONFIG:RELEASE>:/WX;/Zc:inline;/JMC-;/Ob3>"
+			"$<$<CONFIG:RELEASE>:/Zc:inline;/JMC-;/Ob3>"
 	)
 
 	target_link_options(
@@ -100,11 +109,21 @@ if (MSVC)
 	)
 endif ()
 
-set(DATA_DIR "${PROJECT_SOURCE_DIR}/Data")
-set(SKSE_DIR "${DATA_DIR}/SKSE")
-set(SKSE_PLUGINS_DIR "${SKSE_DIR}/Plugins")
+if (IS_DIRECTORY PAPYRUS_SOURCE_DIR)
+	install(
+		DIRECTORY "${DATA_DIR}/Source"
+		DESTINATION "."
+		COMPONENT components
+	)
+endif()
 
-set(INI_PATH "${SKSE_PLUGINS_DIR}/${PROJECT_NAME}.ini")
+if (IS_DIRECTORY CUSTOM_CONSOLE_DIR)
+	install(
+		DIRECTORY "${SKSE_DIR}/CustomConsole"
+		DESTINATION "."
+		COMPONENT components
+	)
+endif()
 
 include(components.cmake)
 
@@ -115,6 +134,48 @@ if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
 	else()
 		set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME} - Test")
 	endif()
+endif()
+
+set(ARTIFACT_FOLDER "${CMAKE_SOURCE_DIR}/Artifacts")
+
+# ---- Compile Papyrus Scripts and Pack Into Archive ----
+include(Papyrus)
+include(BSArchive)
+
+set(COPY_BSA OFF)
+set(COPY_SCRIPTS  OFF)
+
+if(EXISTS "${PAPYRUS_SOURCE_DIR}" AND IS_DIRECTORY "${Skyrim64Path}")
+	file(GLOB ${PROJECT_NAME}_SOURCES
+		LIST_DIRECTORIES false
+		CONFIGURE_DEPENDS
+		"${PAPYRUS_SOURCE_DIR}/*.psc"
+	)
+
+	Papyrus_Add(
+		"Papyrus"
+		GAME ${Skyrim64Path}
+		IMPORTS ${PAPYRUS_SOURCE_DIR}
+		SOURCES ${${PROJECT_NAME}_SOURCES}
+		OPTIMIZE ANONYMIZE
+	)
+
+	BSArchive_Add(
+		"BSA"
+		OUTPUT "${PROJECT_NAME}.bsa"
+		FORMAT SSE
+		FILES ${Papyrus_OUTPUT}
+	)
+	
+	set(COPY_SCRIPTS ON)
+	if(FULL_RELEASE)
+		set(COPY_BSA ON)
+	endif()
+	
+elseif(EXISTS "${PAPYRUS_SOURCE_DIR}" AND NOT IS_DIRECTORY "${Skyrim64Path}")
+	message(STATUS "Scripts exist in the Data directory, but Skyrim's path was not found, compilation will be skipped.")
+else()
+	message(STATUS "No scripts found to compile.")
 endif()
 
 # ---- Automatically copy artifacts to MO2 ----
@@ -133,12 +194,58 @@ if(DEFINED OUTPUT_FOLDER)
 			-DDST_DIR=${OUTPUT_FOLDER}
 			-DPROJECT_NAME=${PROJECT_NAME}
 			-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Artifacts.cmake"
+		COMMAND "${CMAKE_COMMAND}"
+			-DSRC_DIR=${DATA_DIR}
+			-DDST_DIR=${ARTIFACT_FOLDER}
+			-DPROJECT_NAME=${PROJECT_NAME}
+			-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Artifacts.cmake"
 	)
+
+	if(COPY_SCRIPTS)
+		list(APPEND POST_BUILD_COMMANDS
+			COMMAND "${CMAKE_COMMAND}"
+				-DSOURCE_SCRIPTS=${PAPYRUS_SOURCE_DIR}
+				-DOUTPUT_FOLDER=${OUTPUT_FOLDER}
+				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Sources.cmake"
+		)
+		list(APPEND POST_BUILD_COMMANDS
+			COMMAND "${CMAKE_COMMAND}"
+				-DCOMPILED_SCRIPTS="${CMAKE_BINARY_DIR}/Scripts"
+				-DOUTPUT_FOLDER=${OUTPUT_FOLDER}
+				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Scripts.cmake"
+		)
+		list(APPEND POST_BUILD_COMMANDS
+			COMMAND "${CMAKE_COMMAND}"
+				-DSRC_DIR=${DATA_DIR}
+				-DDST_DIR=${OUTPUT_FOLDER}
+				-DPROJECT_NAME=${PROJECT_NAME}
+				-DBINARY_DIR=${CMAKE_BINARY_DIR}
+				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Archive.cmake"
+		)
+
+		list(APPEND POST_BUILD_COMMANDS
+			COMMAND "${CMAKE_COMMAND}"
+				-DSOURCE_SCRIPTS=${PAPYRUS_SOURCE_DIR}
+				-DOUTPUT_FOLDER=${ARTIFACT_FOLDER}
+				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Sources.cmake"
+		)
+		list(APPEND POST_BUILD_COMMANDS
+			COMMAND "${CMAKE_COMMAND}"
+				-DSRC_DIR=${DATA_DIR}
+				-DDST_DIR=${ARTIFACT_FOLDER}
+				-DPROJECT_NAME=${PROJECT_NAME}
+				-DBINARY_DIR=${CMAKE_BINARY_DIR}
+				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Archive.cmake"
+		)
+	endif()
 	
 	
 	message(STATUS "==== Build Configuration ====")
 	message(STATUS "FULL_RELEASE      = ${FULL_RELEASE}")
+	message(STATUS "Skyrim64Path      = ${Skyrim64Path}")
 	message(STATUS "OUTPUT_FOLDER     = ${OUTPUT_FOLDER}")
+	message(STATUS "COPY_SCRIPTS      = ${COPY_SCRIPTS}")
+	message(STATUS "COPY_BSA          = ${COPY_BSA}")
 	message(STATUS "=============================")
 
 	add_custom_command(

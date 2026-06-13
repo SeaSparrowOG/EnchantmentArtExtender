@@ -1,6 +1,6 @@
 install(
 	FILES
-		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender.ini"
+		"${ARTIFACT_FOLDER}/SKSE/Plugins/EnchantmentArtExtender.ini"
 	DESTINATION "SKSE/Plugins"
 	COMPONENT components
 	EXCLUDE_FROM_ALL
@@ -8,7 +8,7 @@ install(
 
 install(
 	FILES
-		"${DATA_DIR}/EnchantmentArtExtender.esl"
+		"${ARTIFACT_FOLDER}/EnchantmentArtExtender.esl"
 	DESTINATION "."
 	COMPONENT components
 	EXCLUDE_FROM_ALL
@@ -16,7 +16,7 @@ install(
 
 install(
 	FILES
-		"${DATA_DIR}/EnchantmentArtExtender.bsa"
+		"${ARTIFACT_FOLDER}/EnchantmentArtExtender.bsa"
 	DESTINATION "."
 	COMPONENT components
 	EXCLUDE_FROM_ALL

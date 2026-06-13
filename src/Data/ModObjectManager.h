@@ -8,8 +8,8 @@ namespace Data
 		public REX::Singleton<ModObjectManager>
 	{
 	public:
-		const std::string QuestName = fmt::format("{}_ModObjectsQuest"sv, Plugin::NAME);
-		const std::string ScriptName = fmt::format("{}_ModObjectsScript"sv, Plugin::NAME);
+		const std::string QuestName = "EAE_ModObjectsQuest";
+		const std::string ScriptName = "EAE_ModObjectsScript";
 
 		bool PreLoad();
 
@@ -28,8 +28,10 @@ namespace Data
 		return nullptr;
 	}
 
-	inline static constexpr std::size_t EXPECTED_MOD_OBJECT_COUNT = 0;
+	inline static constexpr std::size_t EXPECTED_MOD_OBJECT_COUNT = 1;
+	inline static constexpr const char* EMPTY_SHADER = "EAE_EFS_EmptyShader";
 
 	inline static constexpr std::array<const char*, EXPECTED_MOD_OBJECT_COUNT> EXPECTED_OBJECTS = {
+		EMPTY_SHADER
 	};
 }
