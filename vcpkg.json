@@ -12,7 +12,6 @@
     "magic-enum",
     "rsm-binary-io",
     "spdlog",
-    "simpleini",
     "xbyak"
   ],
   "builtin-baseline": "eae1680538b86f962455c27abca2aad0dc304a4d"

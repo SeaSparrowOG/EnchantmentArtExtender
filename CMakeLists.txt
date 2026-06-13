@@ -105,24 +105,6 @@ set(SKSE_DIR "${DATA_DIR}/SKSE")
 set(SKSE_PLUGINS_DIR "${SKSE_DIR}/Plugins")
 
 set(INI_PATH "${SKSE_PLUGINS_DIR}/${PROJECT_NAME}.ini")
-set(PAPYRUS_SOURCE_DIR "${DATA_DIR}/Source/Scripts")
-set(CUSTOM_CONSOLE_DIR "${SKSE_DIR}/CustomConsole")
-
-if (IS_DIRECTORY PAPYRUS_SOURCE_DIR)
-	install(
-		DIRECTORY "${DATA_DIR}/Source"
-		DESTINATION "."
-		COMPONENT components
-	)
-endif()
-
-if (IS_DIRECTORY CUSTOM_CONSOLE_DIR)
-	install(
-		DIRECTORY "${SKSE_DIR}/CustomConsole"
-		DESTINATION "."
-		COMPONENT components
-	)
-endif()
 
 include(components.cmake)
 
@@ -133,33 +115,6 @@ if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
 	else()
 		set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME} - Test")
 	endif()
-endif()
-
-# ---- Compile Papyrus Scripts and Pack Into Archive ----
-include(Papyrus)
-set(COPY_SCRIPTS  OFF)
-
-if(EXISTS "${PAPYRUS_SOURCE_DIR}" AND IS_DIRECTORY "${Skyrim64Path}")
-	file(GLOB ${PROJECT_NAME}_SOURCES
-		LIST_DIRECTORIES false
-		CONFIGURE_DEPENDS
-		"${PAPYRUS_SOURCE_DIR}/*.psc"
-	)
-
-	Papyrus_Add(
-		"Papyrus"
-		GAME ${Skyrim64Path}
-		IMPORTS ${PAPYRUS_SOURCE_DIR}
-		SOURCES ${${PROJECT_NAME}_SOURCES}
-		OPTIMIZE ANONYMIZE
-	)
-	
-	set(COPY_SCRIPTS ON)
-	
-elseif(EXISTS "${PAPYRUS_SOURCE_DIR}" AND NOT IS_DIRECTORY "${Skyrim64Path}")
-	message(STATUS "Scripts exist in the Data directory, but Skyrim's path was not found, compilation will be skipped.")
-else()
-	message(STATUS "No scripts found to compile.")
 endif()
 
 # ---- Automatically copy artifacts to MO2 ----
@@ -179,28 +134,11 @@ if(DEFINED OUTPUT_FOLDER)
 			-DPROJECT_NAME=${PROJECT_NAME}
 			-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Artifacts.cmake"
 	)
-
-	if(COPY_SCRIPTS)
-		list(APPEND POST_BUILD_COMMANDS
-			COMMAND "${CMAKE_COMMAND}"
-				-DSOURCE_SCRIPTS=${PAPYRUS_SOURCE_DIR}
-				-DOUTPUT_FOLDER=${OUTPUT_FOLDER}
-				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Sources.cmake"
-		)
-		list(APPEND POST_BUILD_COMMANDS
-			COMMAND "${CMAKE_COMMAND}"
-				-DCOMPILED_SCRIPTS="${CMAKE_BINARY_DIR}/Scripts"
-				-DOUTPUT_FOLDER=${OUTPUT_FOLDER}
-				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Scripts.cmake"
-		)
-	endif()
 	
 	
 	message(STATUS "==== Build Configuration ====")
 	message(STATUS "FULL_RELEASE      = ${FULL_RELEASE}")
-	message(STATUS "Skyrim64Path      = ${Skyrim64Path}")
 	message(STATUS "OUTPUT_FOLDER     = ${OUTPUT_FOLDER}")
-	message(STATUS "COPY_SCRIPTS      = ${COPY_SCRIPTS}")
 	message(STATUS "=============================")
 
 	add_custom_command(
