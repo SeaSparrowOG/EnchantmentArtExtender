@@ -17,39 +17,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v5
-      with:
-        submodules: recursive
-
-    - name: Setup vcpkg
-      run: |
-        mkdir -p ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
-        cd $env:VCPKG_INSTALLATION_ROOT
-        ./bootstrap-vcpkg.bat
-        ./vcpkg --version > ${{ github.workspace }}/vcpkg-version.txt
-
-    - name: Cache vcpkg
-      uses: actions/cache@v5
-      id: vcpkg-cache
-      env:
-        cache-name: vcpkg-cache
-      with:
-        path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}/*
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('main/**/vcpkg.json', 'vcpkg-version.txt') }}
-
-    - name: Configure CMake
-      run: |
-        cmake --preset vs-windows-vcpkg-release -Wno-deprecated
-
-    - name: Build
-      run: |
-        cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
-
     - name: Install
       run: |
         cmake --install ${{ github.workspace }}/build --component "components" --config ${{ env.BUILD_TYPE }} --prefix ${{ github.workspace }}/ReleaseBuild
-        cmake --install ${{ github.workspace }}/build --component "SKSEPlugin" --config ${{ env.BUILD_TYPE }} --prefix ${{ github.workspace }}/ReleaseBuild
-
     - name: Upload Artifact
       uses: actions/upload-artifact@v5
       with:

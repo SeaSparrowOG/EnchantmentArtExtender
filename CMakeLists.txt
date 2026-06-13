@@ -109,24 +109,6 @@ if (MSVC)
 	)
 endif ()
 
-if (IS_DIRECTORY PAPYRUS_SOURCE_DIR)
-	install(
-		DIRECTORY "${DATA_DIR}/Source"
-		DESTINATION "."
-		COMPONENT components
-	)
-endif()
-
-if (IS_DIRECTORY CUSTOM_CONSOLE_DIR)
-	install(
-		DIRECTORY "${SKSE_DIR}/CustomConsole"
-		DESTINATION "."
-		COMPONENT components
-	)
-endif()
-
-include(components.cmake)
-
 # ---- Post build ----
 if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
 	if (FULL_RELEASE)
@@ -257,3 +239,19 @@ if(DEFINED OUTPUT_FOLDER)
 else()
 	message(STATUS "Output folder environment variable not set, build files will not be automatically deployed to MO2.")
 endif()
+
+# ---- Github Release Stuff ----
+install(
+	FILES
+		"${DATA_DIR}/EnchantmentArtExtender.esl"
+		"${DATA_DIR}/EnchantmentArtExtender.bsa"
+	DESTINATION "."
+	COMPONENT components
+)
+
+install(
+	FILES
+		"${DATA_DIR}/Source/Scripts/EAE_ModObjectsScript.psc"
+	DESTINATION "Source/Scripts"
+	COMPONENT components
+)
