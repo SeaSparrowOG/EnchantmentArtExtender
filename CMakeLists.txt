@@ -137,13 +137,13 @@ if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
 endif()
 
 set(ARTIFACT_DIR "${CMAKE_BINARY_DIR}/Artifacts")
+set(Textures
+	"${DATA_DIR}/Textures/SeaSparrow/Effects/SEA_Empty.dds"
+)
 
 # ---- Compile Papyrus Scripts and Pack Into Archive ----
 include(Papyrus)
 include(BSArchive)
-
-set(COPY_BSA OFF)
-set(COPY_SCRIPTS  OFF)
 
 if(EXISTS "${PAPYRUS_SOURCE_DIR}" AND IS_DIRECTORY "${Skyrim64Path}")
 	file(GLOB ${PROJECT_NAME}_SOURCES
@@ -164,7 +164,11 @@ if(EXISTS "${PAPYRUS_SOURCE_DIR}" AND IS_DIRECTORY "${Skyrim64Path}")
 		"BSA"
 		OUTPUT "${PROJECT_NAME}.bsa"
 		FORMAT SSE
-		FILES ${Papyrus_OUTPUT}
+		FILES 
+			${Papyrus_OUTPUT}
+			${Textures}
+		PREFIX 
+			"${CMAKE_CURRENT_SOURCE_DIR}/Data"
 	)	
 
 	set(COPY_SCRIPTS ON)
