@@ -136,7 +136,7 @@ if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
 	endif()
 endif()
 
-set(ARTIFACT_FOLDER "${CMAKE_SOURCE_DIR}/Artifacts")
+set(ARTIFACT_DIR "${CMAKE_BINARY_DIR}/Artifacts")
 
 # ---- Compile Papyrus Scripts and Pack Into Archive ----
 include(Papyrus)
@@ -165,13 +165,9 @@ if(EXISTS "${PAPYRUS_SOURCE_DIR}" AND IS_DIRECTORY "${Skyrim64Path}")
 		OUTPUT "${PROJECT_NAME}.bsa"
 		FORMAT SSE
 		FILES ${Papyrus_OUTPUT}
-	)
-	
+	)	
+
 	set(COPY_SCRIPTS ON)
-	if(FULL_RELEASE)
-		set(COPY_BSA ON)
-	endif()
-	
 elseif(EXISTS "${PAPYRUS_SOURCE_DIR}" AND NOT IS_DIRECTORY "${Skyrim64Path}")
 	message(STATUS "Scripts exist in the Data directory, but Skyrim's path was not found, compilation will be skipped.")
 else()
@@ -196,7 +192,7 @@ if(DEFINED OUTPUT_FOLDER)
 			-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Artifacts.cmake"
 		COMMAND "${CMAKE_COMMAND}"
 			-DSRC_DIR=${DATA_DIR}
-			-DDST_DIR=${ARTIFACT_FOLDER}
+			-DDST_DIR=${ARTIFACT_DIR}
 			-DPROJECT_NAME=${PROJECT_NAME}
 			-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Artifacts.cmake"
 	)
@@ -226,13 +222,13 @@ if(DEFINED OUTPUT_FOLDER)
 		list(APPEND POST_BUILD_COMMANDS
 			COMMAND "${CMAKE_COMMAND}"
 				-DSOURCE_SCRIPTS=${PAPYRUS_SOURCE_DIR}
-				-DOUTPUT_FOLDER=${ARTIFACT_FOLDER}
+				-DOUTPUT_FOLDER=${ARTIFACT_DIR}
 				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Sources.cmake"
 		)
 		list(APPEND POST_BUILD_COMMANDS
 			COMMAND "${CMAKE_COMMAND}"
 				-DSRC_DIR=${DATA_DIR}
-				-DDST_DIR=${ARTIFACT_FOLDER}
+				-DDST_DIR=${ARTIFACT_DIR}
 				-DPROJECT_NAME=${PROJECT_NAME}
 				-DBINARY_DIR=${CMAKE_BINARY_DIR}
 				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Archive.cmake"
