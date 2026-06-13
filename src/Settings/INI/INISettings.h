@@ -46,8 +46,10 @@ namespace Settings
 			bool OverrideSettings();
 		};
 
-		inline static constexpr const std::uint8_t EXPECTED_COUNT = 0;
+		inline static constexpr const std::string_view GENERAL_ONLY_PLAYER = "General|bOnlyPlayer"sv;
+		inline static constexpr const std::uint8_t EXPECTED_COUNT = 1;
 		inline static constexpr const std::array<std::string_view, EXPECTED_COUNT> EXPECTED_SETTINGS = {
+			GENERAL_ONLY_PLAYER
 		};
 
 		template <typename T>

@@ -2,7 +2,8 @@
 
 namespace RE::Offset
 {
-	namespace Example
+	namespace WeaponEnchantmentController
 	{
+		REL::Relocation<std::uintptr_t> AttachArt{ REL::ID(34154), 0xDB };
 	}
 }

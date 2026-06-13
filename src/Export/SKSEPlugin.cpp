@@ -1,3 +1,4 @@
+#include "EffectManager/EffectManager.h"
 #include "Data/ModObjectManager.h"
 #include "Hooks/Hooks.h"
 #include "Settings/INI/INISettings.h"
@@ -7,14 +8,19 @@ static void MessageEventCallback(SKSE::MessagingInterface::Message* a_msg)
 {
 	static auto* jsonHolder = Settings::JSON::Holder::GetSingleton();
 	if (!jsonHolder) {
-		SKSE::stl::report_and_fail("Failed to get interla JSON logger."sv);
+		SKSE::stl::report_and_fail("Failed to get internal JSON logger."sv);
 	}
 
 	switch (a_msg->type) {
 	case SKSE::MessagingInterface::kDataLoaded:
-		SECTION_SEPARATOR;
 		if (!Data::PreloadModObjects()) {
-			SKSE::stl::report_and_fail("Failed to preload mod objects. Check the log (Documents/My Games/Skyrim Special Edition/ContainerDistributionFramework.log) for more information."sv);
+			SKSE::stl::report_and_fail(
+				fmt::format("Failed to preload mod objects. Check the log (Documents/My Games/Skyrim Special Edition/{}.log for more information."sv, Plugin::NAME));
+		}
+		SECTION_SEPARATOR;
+		if (!EffectManager::ReadConfigs()) {
+			SKSE::stl::report_and_fail(
+				fmt::format("Failed to parse configs. Check the log (Documents/My Games/Skyrim Special Edition/{}.log for more information."sv, Plugin::NAME));
 		}
 		SECTION_SEPARATOR;
 		jsonHolder->Release();
@@ -80,11 +86,13 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface * a_
 	logger::info("Performing startup tasks..."sv);
 
 	if (!Settings::INI::Read()) {
-		SKSE::stl::report_and_fail("Failed to load INI settings. Check the log (Documents/My Games/Skyrim Special Edition/ContainerDistributionFramework.log) for more information."sv);
+		SKSE::stl::report_and_fail(
+			fmt::format("Failed to load the INI settings. Check the log (Documents/My Games/Skyrim Special Edition/{}.log for more information."sv, Plugin::NAME));
 	}
 	SECTION_SEPARATOR;
 	if (!Hooks::Install()) {
-		SKSE::stl::report_and_fail("Failed to install hooks. Check the log (Documents/My Games/Skyrim Special Edition/ContainerDistributionFramework.log) for more information."sv);
+		SKSE::stl::report_and_fail(
+			fmt::format("Failed to install the necessary hooks. Check the log (Documents/My Games/Skyrim Special Edition/{}.log for more information."sv, Plugin::NAME));
 	}
 	SECTION_SEPARATOR;
 
@@ -94,7 +102,8 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface * a_
 	SECTION_SEPARATOR;
 	if (!Settings::JSON::Preload()) {
 #ifdef NDEBUG
-		SKSE::stl::report_and_fail("Failed to read JSON settings. Check the log for more information."sv);
+		SKSE::stl::report_and_fail(
+			fmt::format("Failed to parse configs. Check the log (Documents/My Games/Skyrim Special Edition/{}.log for more information."sv, Plugin::NAME));
 #endif
 	}
 	
