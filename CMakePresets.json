@@ -54,7 +54,7 @@
       "binaryDir": "${sourceDir}/build-test"
     },
     {
-      "name": "vs-windows-vcpkg-github",
+      "name": "vs2022-windows-vcpkg-release",
       "inherits": [
         "cmake-dev",
         "vcpkg",
@@ -95,8 +95,8 @@
   ],
   "buildPresets": [
     {
-      "name": "Github",
-      "configurePreset": "vs-windows-vcpkg-github",
+      "name": "vs2022-Release",
+      "configurePreset": "vs2022-windows-vcpkg-release",
       "configuration": "Release"
     },
     {
