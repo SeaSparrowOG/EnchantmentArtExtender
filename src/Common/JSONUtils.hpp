@@ -91,6 +91,19 @@ namespace JSONUtils
         GenericFailure    // Catchall (might be missing data handler, cosmic ray, etc)
     };
 
+    std::string QueryResultToString(QueryResult val) {
+        switch (val) {
+        case QueryResult::Success: return "Success";
+        case QueryResult::FormatError: return "FormatError";
+        case QueryResult::FileNotFound: return "FileNotFound";
+        case QueryResult::FormNotInFile: return "FormNotInFile";
+        case QueryResult::WrongFormtype: return "WrongFormtype";
+        case QueryResult::NoForm: return "NoForm";
+        case QueryResult::MissingPo3Tweaks: return "MissingPo3Tweaks";
+        default: return "GenericFailure";
+        }
+    }
+
     template <typename T>
     struct QueryData
     {

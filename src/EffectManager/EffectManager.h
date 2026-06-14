@@ -11,7 +11,10 @@ namespace EffectManager
 		std::vector<RE::EnchantmentItem*> _allowedEnchantments{};
 		std::vector<RE::TESObjectWEAP*>   _allowedWeapons{};
 
-		std::vector<RE::BGSKeyword*> _forbiddenKeywords{};
+		std::vector<RE::BGSKeyword*> _forbiddenEnchantmentKeywords;
+		std::vector<RE::BGSKeyword*> _forbiddenWeaponKeywords;
+		std::vector<RE::TESObjectWEAP*>   _forbiddenWeapons;
+		std::vector<RE::EnchantmentItem*> _forbiddenEnchantments;
 	};
 
 	class EffectDistributor : 
@@ -40,7 +43,11 @@ namespace EffectManager
 			void AddEnchantmentCondition(RE::EnchantmentItem* enchant);
 			void AddEnchKeywordCondition(RE::BGSKeyword* keyword);
 			void AddWeapKeywordCondition(RE::BGSKeyword* keyword);
-			void AddForbiddenKeyword(RE::BGSKeyword* keyword);
+
+			void AddForbiddenEnchantment(RE::EnchantmentItem* ench);
+			void AddForbiddenEnchantmentKeyword(RE::BGSKeyword* kwd);
+			void AddForbiddenWeapon(RE::TESObjectWEAP* weap);
+			void AddForbiddenWeaponKeyword(RE::BGSKeyword* kwd);
 
 			[[nodiscard]] int GetStrictnessLevel() const;
 			[[nodiscard]] bool CanApply(const RE::TESObjectWEAP* weap,
@@ -52,10 +59,13 @@ namespace EffectManager
 			RE::BGSArtObject* _artObject = nullptr;
 			std::unordered_set<RE::FormID> _requiredWeapons;
 			std::unordered_set<RE::FormID> _requiredEnchantments;
+			std::unordered_set<RE::FormID> _forbiddenWeapons;
+			std::unordered_set<RE::FormID> _forbiddenEnchantments;
 
 			std::vector<RE::FormID> _requiredEnchantKeywords;
 			std::vector<RE::FormID> _requiredWeaponKeywords;
-			std::vector<RE::FormID> _forbiddenKeywords;
+			std::vector<RE::FormID> _forbiddenEnchantmentKeywords;
+			std::vector<RE::FormID> _forbiddenWeaponKeywords;
 
 			int           _strictness = -1;
 			PriorityLevel _level = PriorityLevel::None;

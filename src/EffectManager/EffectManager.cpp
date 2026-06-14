@@ -13,6 +13,9 @@ namespace EffectManager
 			(Settings::INI::GENERAL_ONLY_PLAYER.data())
 			.value_or(false);
 
+		if (controller->art) {
+			return;
+		}
 		const auto* magicCaster = controller->caster;
 		const auto* actor = magicCaster ? magicCaster->GetCasterAsActor() : nullptr;
 		if (!actor) {
@@ -64,9 +67,6 @@ namespace EffectManager
 	bool EffectDistributor::AppendArtSwap(ArtSwapProxy& proxy) {
 		ArtSwap swap;
 		swap.SetArtObject(proxy._artObject);
-		for (auto* kwd : proxy._forbiddenKeywords) {
-			swap.AddForbiddenKeyword(kwd);
-		}
 		for (auto* kwd : proxy._requiredWeaponKeywords) {
 			swap.AddWeapKeywordCondition(kwd);
 		}
@@ -78,6 +78,18 @@ namespace EffectManager
 		}
 		for (auto* ench : proxy._allowedEnchantments) {
 			swap.AddEnchantmentCondition(ench);
+		}
+		for (auto* weap : proxy._forbiddenWeapons) {
+			swap.AddForbiddenWeapon(weap);
+		}
+		for (auto* ench : proxy._forbiddenEnchantments) {
+			swap.AddForbiddenEnchantment(ench);
+		}
+		for (auto* kwd : proxy._forbiddenEnchantmentKeywords) {
+			swap.AddForbiddenEnchantmentKeyword(kwd);
+		}
+		for (auto* kwd : proxy._forbiddenWeaponKeywords) {
+			swap.AddForbiddenWeaponKeyword(kwd);
 		}
 		if (!swap.Finalize()) {
 			return false;
@@ -140,11 +152,21 @@ namespace EffectManager
 				});
 			};
 
-		const bool containsForbiddenKeyword =
-			std::ranges::any_of(_forbiddenKeywords, weapHasKeyword) ||
-			std::ranges::any_of(_forbiddenKeywords, enchHasKeyword);
-		if (containsForbiddenKeyword) {
-			//return false;
+		bool isWeapForbidden = _forbiddenWeapons.contains(weap->GetFormID());
+		const auto* templateWeap = weap->templateWeapon;
+		while (!isWeapForbidden && templateWeap) {
+			isWeapForbidden = _forbiddenWeapons.contains(templateWeap->GetFormID());
+			templateWeap = templateWeap->templateWeapon;
+		}
+		isWeapForbidden = isWeapForbidden || std::ranges::any_of(_forbiddenWeaponKeywords, weapHasKeyword);
+		if (isWeapForbidden) {
+			return false;
+		}
+
+		const bool isEnchantmentForbidden = _forbiddenEnchantments.contains(ench->GetFormID()) ||
+			std::ranges::any_of(_forbiddenEnchantmentKeywords, enchHasKeyword);
+		if (isEnchantmentForbidden) {
+			return false;
 		}
 
 		switch (_level) {
@@ -172,6 +194,9 @@ namespace EffectManager
 	void EffectDistributor::ArtSwap::SetArtObject(RE::BGSArtObject* obj) { _artObject = obj; }
 	void EffectDistributor::ArtSwap::AddWeaponCondition(RE::TESObjectWEAP* weap) { _requiredWeapons.insert(weap->GetFormID()); }
 	void EffectDistributor::ArtSwap::AddEnchantmentCondition(RE::EnchantmentItem* enchant) { _requiredEnchantments.insert(enchant->GetFormID()); }
+	void EffectDistributor::ArtSwap::AddForbiddenWeapon(RE::TESObjectWEAP* weap) { _forbiddenWeapons.insert(weap->GetFormID()); }
+	void EffectDistributor::ArtSwap::AddForbiddenEnchantment(RE::EnchantmentItem* ench) { _forbiddenEnchantments.insert(ench->GetFormID()); }
+
 	EffectDistributor::PriorityLevel EffectDistributor::ArtSwap::GetPriorityLevel() const { return _level; }
 	RE::BGSArtObject* EffectDistributor::ArtSwap::GetArtObject() const { return _artObject; }
 	int EffectDistributor::ArtSwap::GetStrictnessLevel() const { return _strictness; }
@@ -192,12 +217,199 @@ namespace EffectManager
 		_requiredWeaponKeywords.emplace_back(keywordID);
 	}
 
-	void EffectDistributor::ArtSwap::AddForbiddenKeyword(RE::BGSKeyword* keyword) {
-		auto keywordID = keyword->GetFormID();
-		if (std::ranges::contains(_forbiddenKeywords, keywordID)) {
+	void EffectDistributor::ArtSwap::AddForbiddenEnchantmentKeyword(RE::BGSKeyword* kwd) { 
+		const auto id = kwd->GetFormID();
+		if (std::ranges::contains(_forbiddenEnchantmentKeywords, id)) {
 			return;
 		}
-		_forbiddenKeywords.emplace_back(keywordID);
+		_forbiddenEnchantmentKeywords.emplace_back(id);
+	}
+
+	void EffectDistributor::ArtSwap::AddForbiddenWeaponKeyword(RE::BGSKeyword* kwd) {
+		const auto id = kwd->GetFormID();
+		if (std::ranges::contains(_forbiddenWeaponKeywords, id)) {
+			return;
+		}
+		_forbiddenWeaponKeywords.emplace_back(id);
+	}
+
+	static constexpr std::string_view ART = "weaponart"sv;
+	static constexpr std::string_view ENCH_KEYWORDS = "enchantmentkeywords"sv;
+	static constexpr std::string_view WEAP_KEYWORDS = "weaponkeywords"sv;
+	static constexpr std::string_view WEAP = "weapons"sv;
+	static constexpr std::string_view ENCH = "enchantments"sv;
+	static constexpr std::string_view RULES = "rules"sv;
+
+	static constexpr size_t SIZE = 5u;
+	static constexpr std::array<std::string_view, SIZE> KNOWN_FIELDS = {
+		ART,
+		ENCH_KEYWORDS,
+		WEAP_KEYWORDS,
+		WEAP,
+		ENCH
+	};
+
+	static bool IsValueResultFatal(JSONUtils::ValueStatus val) {
+		switch (val) {
+		case JSONUtils::ValueStatus::Empty:
+		case JSONUtils::ValueStatus::FormatError:
+		case JSONUtils::ValueStatus::InvalidForm:
+		case JSONUtils::ValueStatus::GenericFailure:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	[[nodiscard]] static bool ParseRule(const Json::Value& rule) {
+		assert(rule.isObject());
+		static auto* distributor = EffectDistributor::GetSingleton();
+		if (!distributor) {
+			logger::critical("    > Failed to get internal distributor."sv);
+			return false;
+		}
+
+		bool result = true;
+		bool skipRegistration = false;
+		auto members = rule.getMemberNames();
+		ArtSwapProxy proxy;
+		for (auto& member : members) {
+			const auto& val = rule[member];
+			bool negate = member.starts_with("!");
+			if (negate) {
+				member = member.substr(1, member.size());
+			}
+
+			const bool known = std::ranges::contains(KNOWN_FIELDS, member);
+			if (!known) {
+				logger::warn("    > Unknown field [{}{}]"sv, negate ? "!" : "", member);
+				result = false;
+				continue;
+			}
+
+			if (member == ART) {
+				if (negate) {
+					logger::warn("    > Field {} was prefixed with \"!\", which is not allowed."sv, member);
+					result = false;
+					continue;
+				}
+				if (!val.isString()) {
+					logger::warn("    > Field {} is not a string."sv, member);
+					result = false;
+					continue;
+				}
+				auto queryResult = JSONUtils::GetFormFromString<RE::BGSArtObject>(val.asString());
+				if (queryResult.value.has_value()) {
+					proxy._artObject = queryResult.value.value();
+				}
+				else {
+					logger::warn("    > Failed to resolve {} with error: {}"sv, member, 
+						JSONUtils::QueryResultToString(queryResult.status));
+					switch (queryResult.status) {
+					case JSONUtils::QueryResult::FormatError:
+					case JSONUtils::QueryResult::GenericFailure:
+					case JSONUtils::QueryResult::MissingPo3Tweaks:
+					case JSONUtils::QueryResult::WrongFormtype:
+						result = false;
+						break;
+					}
+					skipRegistration = true;
+					continue;
+				}
+			}
+			else if (member == ENCH_KEYWORDS) {
+				auto queryResult = JSONUtils::GetFormsFromValue<RE::BGSKeyword>(val);
+				if (!queryResult._data.has_value()) {
+					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
+					result &= IsValueResultFatal(queryResult._status);
+					skipRegistration = true;
+				}
+				const auto& data = queryResult._data.value();
+				for (auto* kwd : data) {
+					if (negate) {
+						proxy._forbiddenEnchantmentKeywords.emplace_back(kwd);
+					}
+					else {
+						proxy._requiredEnchantmentKeywords.emplace_back(kwd);
+					}
+				}
+			}
+			else if (member == WEAP_KEYWORDS) {
+				auto queryResult = JSONUtils::GetFormsFromValue<RE::BGSKeyword>(val);
+				if (!queryResult._data.has_value()) {
+					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
+					result &= IsValueResultFatal(queryResult._status);
+					skipRegistration = true;
+				}
+				const auto& data = queryResult._data.value();
+				for (auto* kwd : data) {
+					if (negate) {
+						proxy._forbiddenWeaponKeywords.emplace_back(kwd);
+					}
+					else {
+						proxy._requiredWeaponKeywords.emplace_back(kwd);
+					}
+				}
+			}
+			else if (member == WEAP) {
+				auto queryResult = JSONUtils::GetFormsFromValue<RE::TESObjectWEAP>(val);
+				if (!queryResult._data.has_value()) {
+					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
+					result &= IsValueResultFatal(queryResult._status);
+					skipRegistration = true;
+				}
+				const auto& data = queryResult._data.value();
+				for (auto* weap : data) {
+					if (negate) {
+						proxy._forbiddenWeapons.emplace_back(weap);
+					}
+					else {
+						proxy._allowedWeapons.emplace_back(weap);
+					}
+				}
+			}
+			else if (member == ENCH) {
+				auto queryResult = JSONUtils::GetFormsFromValue<RE::EnchantmentItem>(val);
+				if (!queryResult._data.has_value()) {
+					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
+					result &= IsValueResultFatal(queryResult._status);
+					skipRegistration = true;
+				}
+				const auto& data = queryResult._data.value();
+				for (auto* weap : data) {
+					if (negate) {
+						proxy._forbiddenEnchantments.emplace_back(weap);
+					}
+					else {
+						proxy._allowedEnchantments.emplace_back(weap);
+					}
+				}
+			}
+		}
+		if (!result) {
+			return false;
+		}
+		if (skipRegistration) {
+			return true;
+		}
+		return distributor->AppendArtSwap(proxy);
+	}
+
+	[[nodiscard]] static bool ParseSwaps(const Json::Value& swaps) {
+		assert(swaps.isObject());
+		const auto& rulesValue = swaps[RULES.data()];
+		if (rulesValue) {
+			if (!rulesValue.isArray()) {
+				logger::critical("    > Detect {} field which is not an array."sv, RULES);
+				return false;
+			}
+			bool arrayResolved = true;
+			for (const auto& arrayVal : rulesValue) {
+				arrayResolved &= ParseRule(arrayVal);
+			}
+			return arrayResolved;
+		}
+		return ParseRule(swaps);
 	}
 
 	bool ReadConfigs() {
@@ -214,132 +426,26 @@ namespace EffectManager
 			return false;
 		}
 
+		bool success = true;
 		const auto& configs = jsonHolder->GetConfigs();
-		static std::vector<std::string> knownFields = {
-			"weaponart",
-			"enchantmentkeywords",
-			"weapons",
-			"weaponkeywords",
-			"enchantments"
-		};
 
 		for (const auto& [name, config] : configs) {
-			if (!config.isObject()) {
-				LOG_DEBUG("{} top level is not an object."sv, name);
-				continue;
+			if (config.isObject()) {
+				logger::info("  - Reading Config: {}"sv, name);
+				success &= ParseSwaps(config);
 			}
-			const auto& rules = config["rules"];
-			if (!rules || !rules.isArray()) {
-				LOG_DEBUG("{} top level is not rules."sv, name);
-				continue;
-			}
-			for (const auto& rule : rules) {
-				if (!rule.isObject()) {
-					LOG_DEBUG("{} - Non-Object."sv, name);
-					continue;
-				}
-
-				const auto& displayObjRaw = rule["weaponart"];
-				if (!displayObjRaw) {
-					LOG_DEBUG("{} - missing Weapon Art."sv, name);
-					continue;
-				}
-				else if (!displayObjRaw.isString()) {
-					LOG_DEBUG("{} - Weapon Art is not a string."sv, name);
-					continue;
-				}
-
-				ArtSwapProxy proxy;
-				auto queryResponse = JSONUtils::GetFormFromString<RE::BGSArtObject>(displayObjRaw.asString());
-				if (queryResponse.status == JSONUtils::QueryResult::Success) {
-					proxy._artObject = queryResponse.value.value();
-				}
-				else {
-					LOG_DEBUG("{} - Failed to resolve {}"sv, name, displayObjRaw.asString());
-					continue;
-				}
-
-				auto members = rule.getMemberNames();
-				for (auto& member : members) {
-					bool negate = member.starts_with("!");
-					if (negate) {
-						member = member.substr(1, member.size());
-					}
-
-					if (std::ranges::none_of(knownFields, [member = member](const std::string& str) { return str == member; })) {
-						LOG_DEBUG("{} - Unknown field {}"sv, name, member);
+			else if (config.isArray()) {
+				for (Json::ArrayIndex i = 0; i < config.size(); ++i) {
+					logger::info("  - Reading Config: {} (Index {})"sv, name, i);
+					const auto& arrayElement = config[i];
+					if (!arrayElement.isObject()) {
+						logger::warn("    >Not an object - skipped."sv);
 						continue;
 					}
-
-					const auto& field = rule[member];
-					if (negate) {
-						auto val = JSONUtils::GetFormsFromValue<RE::BGSKeyword>(field);
-						if (!val._data.has_value()) {
-							LOG_DEBUG("{}"sv, JSONUtils::ValueResultToString(val._status));
-							continue;
-						}
-						auto result = val._data.value();
-						for (auto* kwd : result) {
-							if (kwd) {
-								proxy._forbiddenKeywords.emplace_back(kwd);
-							}
-						}
-					}
-					else if (member == "enchantmentkeywords") {
-						auto val = JSONUtils::GetFormsFromValue<RE::BGSKeyword>(field);
-						if (!val._data.has_value()) {
-							LOG_DEBUG("{}"sv, JSONUtils::ValueResultToString(val._status));
-							continue;
-						}
-						auto result = val._data.value();
-						for (auto* kwd : result) {
-							if (kwd) {
-								proxy._requiredEnchantmentKeywords.emplace_back(kwd);
-							}
-						}
-					}
-					else if (member == "weaponkeywords") {
-						auto val = JSONUtils::GetFormsFromValue<RE::BGSKeyword>(field);
-						if (!val._data.has_value()) {
-							LOG_DEBUG("{}"sv, JSONUtils::ValueResultToString(val._status));
-							continue;
-						}
-						auto result = val._data.value();
-						for (auto* kwd : result) {
-							if (kwd) {
-								proxy._requiredWeaponKeywords.emplace_back(kwd);
-							}
-						}
-					}
-					else if (member == "weapons") {
-						auto val = JSONUtils::GetFormsFromValue<RE::TESObjectWEAP>(field);
-						if (!val._data.has_value()) {
-							LOG_DEBUG("{}"sv, JSONUtils::ValueResultToString(val._status));
-							continue;
-						}
-						auto result = val._data.value();
-						for (auto* weap : result) {
-							proxy._allowedWeapons.emplace_back(weap);
-						}
-					}
-					else if (member == "enchantments") {
-						auto val = JSONUtils::GetFormsFromValue<RE::EnchantmentItem>(field);
-						if (!val._data.has_value()) {
-							LOG_DEBUG("{}"sv, JSONUtils::ValueResultToString(val._status));
-							continue;
-						}
-						auto result = val._data.value();
-						for (auto* ench : result) {
-							proxy._allowedEnchantments.emplace_back(ench);
-						}
-					}
-				}
-
-				if (!distributor->AppendArtSwap(proxy)) {
-					LOG_DEBUG("Failure"sv);
+					success &= ParseSwaps(arrayElement);
 				}
 			}
 		}
-		return true;
+		return success;
 	}
 }
