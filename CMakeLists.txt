@@ -235,3 +235,23 @@ install(
 	DESTINATION "Source/Scripts"
 	COMPONENT components
 )
+
+install(
+	FILES
+		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender.ini"
+	DESTINATION "SKSE/Plugins"
+	COMPONENT components
+)
+
+install(
+	FILES
+		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender/VWChaos.json"
+		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender/VWFire.json"
+		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender/VWFireShock.json"
+		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender/VWFrost.json"
+		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender/VWFrostFire.json"
+		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender/VWFrostShock.json"
+		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender/VWShock.json"
+	DESTINATION "SKSE/Plugins/EnchantmentArtExtender"
+	COMPONENT components
+)

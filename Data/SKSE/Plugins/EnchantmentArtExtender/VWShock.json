@@ -1,0 +1,66 @@
+[
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x8FB",
+    "EnchantmentKeywords": [
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeBattleaxe" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x8F9",
+    "EnchantmentKeywords": [
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeDagger" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x923",
+    "EnchantmentKeywords": [
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeGreatsword" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x910",
+    "EnchantmentKeywords": [
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeMace" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x80B",
+    "EnchantmentKeywords": [
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeCurved", "WeapTypeSword" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x917",
+    "EnchantmentKeywords": [
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeSword" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x900",
+    "EnchantmentKeywords": [
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeWarAxe" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x901",
+    "EnchantmentKeywords": [
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeWarhammer" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  }
+]

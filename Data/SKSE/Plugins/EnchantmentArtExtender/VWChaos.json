@@ -1,0 +1,82 @@
+[
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x9D6",
+    "EnchantmentKeywords": [
+      "MagicDamageFire",
+      "MagicDamageFrost",
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeBattleaxe" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x9D7",
+    "EnchantmentKeywords": [
+      "MagicDamageFire",
+      "MagicDamageFrost",
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeDagger" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x9D9",
+    "EnchantmentKeywords": [
+      "MagicDamageFire",
+      "MagicDamageFrost",
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeGreatsword" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x9DB",
+    "EnchantmentKeywords": [
+      "MagicDamageFire",
+      "MagicDamageFrost",
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeMace" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x801",
+    "EnchantmentKeywords": [
+      "MagicDamageFire",
+      "MagicDamageFrost",
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeCurved", "WeapTypeSword" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x9C5",
+    "EnchantmentKeywords": [
+      "MagicDamageFire",
+      "MagicDamageFrost",
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeSword" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x9DD",
+    "EnchantmentKeywords": [
+      "MagicDamageFire",
+      "MagicDamageFrost",
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeWarAxe" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  },
+  {
+    "WeaponArt": "Vibrant Weapons EAE.esp|0x9DE",
+    "EnchantmentKeywords": [
+      "MagicDamageFire",
+      "MagicDamageFrost",
+      "MagicDamageShock"
+    ],
+    "WeaponKeywords": [ "WeapTypeWarhammer" ],
+    "!WeaponKeywords": [ "VWDisableFX" ]
+  }
+]
