@@ -1,17 +1,18 @@
 {
-  "name": "enchantmentartextender",
-  "version-string": "2.0.0",
+  "name": "enchantment-art-extender",
+  "version-string": "3.0.0",
   "description": "SKSE framework for attaching light and effects to enchanted weapons based on rules.",
-  "homepage": "",
-  "license": "MIT",
+  "homepage": "https://github.com/SeaSparrowOG/EnchantmentArtExtender",
+  "license": "GPL-3.0",
   "dependencies": [
+    "boost-stl-interfaces",
+    "clib-util",
     "fmt",
+    "jsoncpp",
+    "magic-enum",
     "rsm-binary-io",
     "spdlog",
-    "clib-util",
-    "jsoncpp",
-    "simpleini",
     "xbyak"
   ],
-  "builtin-baseline": "ea295dff0b3e9e9caeb49d1225dc7272d3231cf1"
+  "builtin-baseline": "eae1680538b86f962455c27abca2aad0dc304a4d"
 }

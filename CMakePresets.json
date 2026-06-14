@@ -1,10 +1,10 @@
 {
-  "version": 3,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 21,
-    "patch": 0
-  },
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
   "configurePresets": [
     {
       "name": "cmake-dev",
@@ -33,21 +33,25 @@
     {
       "name": "vs2022",
       "hidden": true,
-      "generator": "Visual Studio 17 2022",
-      "toolset": "v143"
+      "generator": "Visual Studio 17 2022"
+    },
+    {
+      "name": "vs",
+      "hidden": true,
+      "generator": "Visual Studio 18 2026"
     },
     {
       "name": "release",
       "hidden": true,
-      "binaryDir": "${sourceDir}/build"
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "FULL_RELEASE": true
+      }
     },
     {
       "name": "test",
       "hidden": true,
-      "binaryDir": "${sourceDir}/build-test",
-      "cacheVariables": {
-        "BUILD_TEST": true
-      }
+      "binaryDir": "${sourceDir}/build-test"
     },
     {
       "name": "vs2022-windows-vcpkg-release",
@@ -57,15 +61,31 @@
         "windows",
         "vs2022",
         "release"
-      ]
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     },
     {
-      "name": "vs2022-windows-vcpkg-test",
+      "name": "vs-windows-vcpkg-release",
       "inherits": [
         "cmake-dev",
         "vcpkg",
         "windows",
-        "vs2022",
+        "vs",
+        "release"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "vs-windows-vcpkg-test",
+      "inherits": [
+        "cmake-dev",
+        "vcpkg",
+        "windows",
+        "vs",
         "test"
       ],
       "cacheVariables": {
@@ -75,13 +95,18 @@
   ],
   "buildPresets": [
     {
-      "name": "Release",
+      "name": "vs2022-Release",
       "configurePreset": "vs2022-windows-vcpkg-release",
       "configuration": "Release"
     },
     {
+      "name": "Release",
+      "configurePreset": "vs-windows-vcpkg-release",
+      "configuration": "Release"
+    },
+    {
       "name": "Test",
-      "configurePreset": "vs2022-windows-vcpkg-test",
+      "configurePreset": "vs-windows-vcpkg-test",
       "configuration": "Debug"
     }
   ]
