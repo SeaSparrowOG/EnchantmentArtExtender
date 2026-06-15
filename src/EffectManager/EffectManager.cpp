@@ -251,7 +251,6 @@ namespace EffectManager
 
 	static bool IsValueResultFatal(JSONUtils::ValueStatus val) {
 		switch (val) {
-		case JSONUtils::ValueStatus::Empty:
 		case JSONUtils::ValueStatus::FormatError:
 		case JSONUtils::ValueStatus::InvalidForm:
 		case JSONUtils::ValueStatus::GenericFailure:
@@ -319,10 +318,15 @@ namespace EffectManager
 			}
 			else if (member == ENCH_KEYWORDS) {
 				auto queryResult = JSONUtils::GetFormsFromValue<RE::BGSKeyword>(val);
+				if (queryResult._status == JSONUtils::ValueStatus::LimitedSuccess) {
+					skipRegistration = true;
+					continue;
+				}
 				if (!queryResult._data.has_value()) {
 					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
 					result &= IsValueResultFatal(queryResult._status);
 					skipRegistration = true;
+					continue;
 				}
 				const auto& data = queryResult._data.value();
 				for (auto* kwd : data) {
@@ -336,10 +340,15 @@ namespace EffectManager
 			}
 			else if (member == WEAP_KEYWORDS) {
 				auto queryResult = JSONUtils::GetFormsFromValue<RE::BGSKeyword>(val);
+				if (queryResult._status == JSONUtils::ValueStatus::LimitedSuccess) {
+					skipRegistration = true;
+					continue;
+				}
 				if (!queryResult._data.has_value()) {
 					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
 					result &= IsValueResultFatal(queryResult._status);
 					skipRegistration = true;
+					continue;
 				}
 				const auto& data = queryResult._data.value();
 				for (auto* kwd : data) {
@@ -357,6 +366,7 @@ namespace EffectManager
 					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
 					result &= IsValueResultFatal(queryResult._status);
 					skipRegistration = true;
+					continue;
 				}
 				const auto& data = queryResult._data.value();
 				for (auto* weap : data) {
@@ -374,6 +384,7 @@ namespace EffectManager
 					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
 					result &= IsValueResultFatal(queryResult._status);
 					skipRegistration = true;
+					continue;
 				}
 				const auto& data = queryResult._data.value();
 				for (auto* weap : data) {
@@ -386,6 +397,13 @@ namespace EffectManager
 				}
 			}
 		}
+		if (proxy._requiredEnchantmentKeywords.empty() &&
+			proxy._requiredWeaponKeywords.empty() && proxy._allowedEnchantments.empty() &&
+			proxy._allowedWeapons.empty())
+		{
+			return true;
+		}
+
 		if (!result) {
 			return false;
 		}

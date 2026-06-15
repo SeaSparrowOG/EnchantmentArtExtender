@@ -194,6 +194,7 @@ namespace JSONUtils
     enum class ValueStatus
     {
         Success,
+        LimitedSuccess,
 
         Empty,
         FormatError,
@@ -204,6 +205,7 @@ namespace JSONUtils
     std::string ValueResultToString(ValueStatus val) {
         switch (val) {
         case ValueStatus::Success: return "Success";
+        case ValueStatus::LimitedSuccess: return "LimitedSuccess";
         case ValueStatus::Empty: return "Empty";
         case ValueStatus::FormatError: return "FormatError";
         case ValueStatus::InvalidForm: return "InvalidForm";
@@ -237,6 +239,9 @@ namespace JSONUtils
                 switch (query.status) {
                 case QueryResult::NoForm:
                 case QueryResult::FileNotFound:
+                    if (result._status < ValueStatus::LimitedSuccess) {
+                        result._status = ValueStatus::LimitedSuccess;
+                    }
                     break;
                 case QueryResult::FormatError:
                 case QueryResult::MissingPo3Tweaks:
