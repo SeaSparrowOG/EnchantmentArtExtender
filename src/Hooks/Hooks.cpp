@@ -5,30 +5,21 @@
 
 namespace Hooks {
 	bool Install() {
-		logger::info("Installing hooks..."sv);
-		size_t allocSize = 14u * 1u;
-		if (allocSize > 0u) {
-			logger::info("  - Allocated {} bytes to the trampoline."sv, allocSize);
-			SKSE::AllocTrampoline(allocSize);
-		}
-		else {
-			logger::info("  - Did not need to allocate trampoline space."sv);
-		}
-
+		REX::INFO("Installing hooks..."sv);
 		bool result = true;
 		result &= AttachEnchantmentVisuals::InstallAttachPatch();
 		return result;
 	}
 
 	bool AttachEnchantmentVisuals::InstallAttachPatch() {
-		logger::info("  - Installing Attach Enchantment Visuals patch"sv);
+		REX::INFO("  - Installing Attach Enchantment Visuals patch"sv);
 		REL::Relocation<std::uintptr_t> target = RE::Offset::WeaponEnchantmentController::AttachArt;
-		if (!REL::make_pattern<"E8">().match(target.address())) {
-			logger::critical("    >Failed to match pattern."sv);
+		if (!REL::Pattern<"E8">().match(target.address())) {
+			REX::CRITICAL("    >Failed to match pattern."sv);
 			return false;
 		}
 
-		auto& trampoline = SKSE::GetTrampoline();
+		auto& trampoline = REL::GetTrampoline();
 		_attachArt = trampoline.write_call<5>(target.address(), &AttachArt);
 		return true;
 	}

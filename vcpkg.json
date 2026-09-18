@@ -1,17 +1,14 @@
 {
-  "name": "enchantment-art-extender",
-  "version-string": "3.0.1",
-  "description": "SKSE framework for attaching light and effects to enchanted weapons based on rules.",
-  "homepage": "https://github.com/SeaSparrowOG/EnchantmentArtExtender",
+  "name": "archery-rebalance",
+  "version-string": "3.0.0",
+  "description": "SKSE Plugin for Skyrim Special Edition that fixes some annoyances that I have with archery.",
+  "homepage": "https://github.com/SeaSparrowOG/ArcheryRebalance",
   "license": "GPL-3.0",
   "dependencies": [
-    "boost-stl-interfaces",
+    "commonlib-shared",
     "clib-util",
-    "fmt",
-    "jsoncpp",
     "magic-enum",
-    "rsm-binary-io",
-    "spdlog",
+    "jsoncpp",
     "xbyak"
   ],
   "builtin-baseline": "eae1680538b86f962455c27abca2aad0dc304a4d"

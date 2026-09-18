@@ -8,7 +8,7 @@ endif()
 # -------- Project ----------
 project(
 	EnchantmentArtExtender
-	VERSION 3.0.1
+	VERSION 3.0.2
 	LANGUAGES CXX
 )
 
@@ -176,7 +176,7 @@ if(DEFINED OUTPUT_FOLDER)
 			-DDST_DIR=${OUTPUT_FOLDER}
 			-DPROJECT_NAME=${PROJECT_NAME}
 			-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Artifacts.cmake"
-	)
+	)	
 
 	if(COPY_SCRIPTS)
 		list(APPEND POST_BUILD_COMMANDS
@@ -200,7 +200,7 @@ if(DEFINED OUTPUT_FOLDER)
 				-P "${PROJECT_SOURCE_DIR}/CMake/Scripts/CMake-Copy-Archive.cmake"
 		)
 	endif()
-	
+
 	
 	message(STATUS "==== Build Configuration ====")
 	message(STATUS "FULL_RELEASE      = ${FULL_RELEASE}")
@@ -223,7 +223,7 @@ endif()
 # ---- Github Release Stuff ----
 install(
 	FILES
-		"${DATA_DIR}/EnchantmentArtExtender.esl"
+	"${DATA_DIR}/EnchantmentArtExtender.esl"
 		"${DATA_DIR}/EnchantmentArtExtender.bsa"
 	DESTINATION "."
 	COMPONENT components
@@ -238,7 +238,7 @@ install(
 
 install(
 	FILES
-		"${DATA_DIR}/SKSE/Plugins/EnchantmentArtExtender.ini"
+		"${DATA_DIR}/SKSE/Plugins/${PROJECT_NAME}.ini"
 	DESTINATION "SKSE/Plugins"
 	COMPONENT components
 )

@@ -18,7 +18,7 @@ namespace EffectManager
 	};
 
 	class EffectDistributor : 
-		public REX::Singleton<EffectDistributor>
+		public REX::TSingleton<EffectDistributor>
 	{
 	public:
 		void TryApplyEffect(RE::WeaponEnchantmentController* controller, RE::EnchantmentItem* enchant) const;

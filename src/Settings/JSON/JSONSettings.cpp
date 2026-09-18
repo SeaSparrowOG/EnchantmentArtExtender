@@ -8,9 +8,9 @@ namespace Settings::JSON
 		Release();
 
 		std::string jsonFolder = fmt::format(R"(.\Data\SKSE\Plugins\{})"sv, Plugin::NAME);
-		logger::info("  >Settings folder: {}."sv, jsonFolder);
+		REX::INFO("  >Settings folder: {}."sv, jsonFolder);
 		if (!std::filesystem::exists(jsonFolder)) {
-			logger::info("    >No settings folder found."sv);
+			REX::INFO("    >No settings folder found."sv);
 			return true;
 		}
 
@@ -23,22 +23,22 @@ namespace Settings::JSON
 			}
 
 			std::sort(paths.begin(), paths.end());
-			logger::info("    >Found {} configuration files."sv, std::to_string(paths.size()));
+			REX::INFO("    >Found {} configuration files."sv, std::to_string(paths.size()));
 		}
 		catch (const std::exception& e) {
-			logger::warn("Caught {} while reading files."sv, e.what());
+			REX::WARN("Caught {} while reading files."sv, e.what());
 			return false;
 		}
 
 		if (paths.empty()) {
-			logger::info("    >No settings found"sv);
+			REX::INFO("    >No settings found"sv);
 			return true;
 		}
 
 		bool success = true;
 		for (const auto& path : paths) {
 			auto configName = path.substr(jsonFolder.size() + 1, path.size() - 1);
-			logger::info("    >Reading config {}..."sv, configName);
+			REX::INFO("    >Reading config {}..."sv, configName);
 			Json::CharReaderBuilder builder;
 			builder["collectComments"] = false;
 
@@ -46,7 +46,7 @@ namespace Settings::JSON
 			try {
 				std::ifstream rawJSON(path);
 				if (!rawJSON.is_open()) {
-					logger::error("      >Failed to open: {}"sv, path);
+					REX::ERROR("      >Failed to open: {}"sv, path);
 					success = false;
 					continue;
 				}
@@ -54,7 +54,7 @@ namespace Settings::JSON
 				std::string errs;
 				Json::Value JSONFile;
 				if (!Json::parseFromStream(builder, rawJSON, &JSONFile, &errs)) {
-					logger::error("      >Failed to parse {}: {}", path, errs);
+					REX::ERROR("      >Failed to parse {}: {}", path, errs);
 					success = false;
 					continue;
 				}
@@ -72,13 +72,13 @@ namespace Settings::JSON
 				}
 			}
 			catch (const std::exception& e) {
-				logger::warn("Caught {} while reading files.", e.what());
+				REX::WARN("Caught {} while reading files.", e.what());
 				success = false;
 				continue;
 			}
 		}
 
-		logger::info("Finished reading all settings."sv);
+		REX::INFO("Finished reading all settings."sv);
 		return success;
 	}
 
@@ -89,25 +89,25 @@ namespace Settings::JSON
 	}
 
 	void Holder::LogErrors() const {
-		logger::error("Finished preloading JSON settings. Found {} problematic configs:", _errors.size());
+		REX::ERROR("Finished preloading JSON settings. Found {} problematic configs:", _errors.size());
 		for (const auto& [config, error] : _errors) {
-			logger::error("  >{}"sv, config);
+			REX::ERROR("  >{}"sv, config);
 			if (!error.deeplyNestedObjects.empty()) {
-				logger::error("    The following fields were nested too deeply:"sv);
+				REX::ERROR("    The following fields were nested too deeply:"sv);
 				for (const auto& instance : error.deeplyNestedObjects) {
-					logger::error("      - {}"sv, instance);
+					REX::ERROR("      - {}"sv, instance);
 				}
 			}
 			if (!error.duplicateKeys.empty()) {
-				logger::error("    The following fields were defined multiple times:"sv);
+				REX::ERROR("    The following fields were defined multiple times:"sv);
 				for (const auto& instance : error.duplicateKeys) {
-					logger::error("      - {}"sv, instance);
+					REX::ERROR("      - {}"sv, instance);
 				}
 			}
 			if (!error.emptyObjects.empty()) {
-				logger::error("    The following fields were empty:"sv);
+				REX::ERROR("    The following fields were empty:"sv);
 				for (const auto& instance : error.emptyObjects) {
-					logger::error("      - {}"sv, instance);
+					REX::ERROR("      - {}"sv, instance);
 				}
 			}
 		}
@@ -227,17 +227,17 @@ namespace Settings::JSON
 	}
 
 	bool Preload() {
-		logger::info("Preloading JSON settings..."sv);
+		REX::INFO("Preloading JSON settings..."sv);
 		auto* manager = Holder::GetSingleton();
 		if (!manager) {
-			logger::error("  >Failed to fetch internal JSON settings holder."sv);
+			REX::ERROR("  >Failed to fetch internal JSON settings holder."sv);
 			return false;
 		}
 		if (!manager->Load()) {
 			manager->LogErrors();
 			return false;
 		}
-		logger::info("Finished preloading JSON settings."sv);
+		REX::INFO("Finished preloading JSON settings."sv);
 		return true;
 	}
 }
