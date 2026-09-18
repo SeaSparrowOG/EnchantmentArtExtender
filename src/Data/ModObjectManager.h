@@ -5,7 +5,7 @@ namespace Data
 	bool PreloadModObjects();
 
 	class ModObjectManager :
-		public REX::Singleton<ModObjectManager>
+		public REX::TSingleton<ModObjectManager>
 	{
 	public:
 		const std::string QuestName = "EAE_ModObjectsQuest";

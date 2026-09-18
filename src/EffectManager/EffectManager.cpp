@@ -264,7 +264,7 @@ namespace EffectManager
 		assert(rule.isObject());
 		static auto* distributor = EffectDistributor::GetSingleton();
 		if (!distributor) {
-			logger::critical("    > Failed to get internal distributor."sv);
+			REX::CRITICAL("    > Failed to get internal distributor."sv);
 			return false;
 		}
 
@@ -281,19 +281,19 @@ namespace EffectManager
 
 			const bool known = std::ranges::contains(KNOWN_FIELDS, member);
 			if (!known) {
-				logger::warn("    > Unknown field [{}{}]"sv, negate ? "!" : "", member);
+				REX::WARN("    > Unknown field [{}{}]"sv, negate ? "!" : "", member);
 				result = false;
 				continue;
 			}
 
 			if (member == ART) {
 				if (negate) {
-					logger::warn("    > Field {} was prefixed with \"!\", which is not allowed."sv, member);
+					REX::WARN("    > Field {} was prefixed with \"!\", which is not allowed."sv, member);
 					result = false;
 					continue;
 				}
 				if (!val.isString()) {
-					logger::warn("    > Field {} is not a string."sv, member);
+					REX::WARN("    > Field {} is not a string."sv, member);
 					result = false;
 					continue;
 				}
@@ -302,7 +302,7 @@ namespace EffectManager
 					proxy._artObject = queryResult.value.value();
 				}
 				else {
-					logger::warn("    > Failed to resolve {} with error: {}"sv, member, 
+					REX::WARN("    > Failed to resolve {} with error: {}"sv, member, 
 						JSONUtils::QueryResultToString(queryResult.status));
 					switch (queryResult.status) {
 					case JSONUtils::QueryResult::FormatError:
@@ -323,7 +323,7 @@ namespace EffectManager
 					continue;
 				}
 				if (!queryResult._data.has_value()) {
-					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
+					REX::WARN("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
 					result &= IsValueResultFatal(queryResult._status);
 					skipRegistration = true;
 					continue;
@@ -345,7 +345,7 @@ namespace EffectManager
 					continue;
 				}
 				if (!queryResult._data.has_value()) {
-					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
+					REX::WARN("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
 					result &= IsValueResultFatal(queryResult._status);
 					skipRegistration = true;
 					continue;
@@ -363,7 +363,7 @@ namespace EffectManager
 			else if (member == WEAP) {
 				auto queryResult = JSONUtils::GetFormsFromValue<RE::TESObjectWEAP>(val);
 				if (!queryResult._data.has_value()) {
-					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
+					REX::WARN("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
 					result &= IsValueResultFatal(queryResult._status);
 					skipRegistration = true;
 					continue;
@@ -381,7 +381,7 @@ namespace EffectManager
 			else if (member == ENCH) {
 				auto queryResult = JSONUtils::GetFormsFromValue<RE::EnchantmentItem>(val);
 				if (!queryResult._data.has_value()) {
-					logger::warn("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
+					REX::WARN("    > {} Failed with: {}"sv, member, JSONUtils::ValueResultToString(queryResult._status));
 					result &= IsValueResultFatal(queryResult._status);
 					skipRegistration = true;
 					continue;
@@ -418,7 +418,7 @@ namespace EffectManager
 		const auto& rulesValue = swaps[RULES.data()];
 		if (rulesValue) {
 			if (!rulesValue.isArray()) {
-				logger::critical("    > Detect {} field which is not an array."sv, RULES);
+				REX::CRITICAL("    > Detect {} field which is not an array."sv, RULES);
 				return false;
 			}
 			bool arrayResolved = true;
@@ -431,16 +431,16 @@ namespace EffectManager
 	}
 
 	bool ReadConfigs() {
-		logger::info("Parsing stored configs..."sv);
+		REX::INFO("Parsing stored configs..."sv);
 		const auto* jsonHolder = Settings::JSON::Holder::GetSingleton();
 		if (!jsonHolder) {
-			logger::critical("  - Failed to get internal JSON Config Holder."sv);
+			REX::CRITICAL("  - Failed to get internal JSON Config Holder."sv);
 			return false;
 		}
 
 		auto* distributor = EffectDistributor::GetSingleton();
 		if (!distributor) {
-			logger::critical("  - Failed to get internal Effect Distributor."sv);
+			REX::CRITICAL("  - Failed to get internal Effect Distributor."sv);
 			return false;
 		}
 
@@ -449,15 +449,15 @@ namespace EffectManager
 
 		for (const auto& [name, config] : configs) {
 			if (config.isObject()) {
-				logger::info("  - Reading Config: {}"sv, name);
+				REX::INFO("  - Reading Config: {}"sv, name);
 				success &= ParseSwaps(config);
 			}
 			else if (config.isArray()) {
 				for (Json::ArrayIndex i = 0; i < config.size(); ++i) {
-					logger::info("  - Reading Config: {} (Index {})"sv, name, i);
+					REX::INFO("  - Reading Config: {} (Index {})"sv, name, i);
 					const auto& arrayElement = config[i];
 					if (!arrayElement.isObject()) {
-						logger::warn("    >Not an object - skipped."sv);
+						REX::WARN("    >Not an object - skipped."sv);
 						continue;
 					}
 					success &= ParseSwaps(arrayElement);
