@@ -8,7 +8,7 @@ endif()
 # -------- Project ----------
 project(
 	EnchantmentArtExtender
-	VERSION 3.0.2
+	VERSION 3.0.3
 	LANGUAGES CXX
 )
 

@@ -1,6 +1,6 @@
 {
   "name": "archery-rebalance",
-  "version-string": "3.0.0",
+  "version-string": "3.0.3",
   "description": "SKSE Plugin for Skyrim Special Edition that fixes some annoyances that I have with archery.",
   "homepage": "https://github.com/SeaSparrowOG/ArcheryRebalance",
   "license": "GPL-3.0",
