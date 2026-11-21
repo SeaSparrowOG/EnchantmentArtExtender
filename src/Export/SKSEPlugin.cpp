@@ -15,12 +15,12 @@ static void MessageEventCallback(SKSE::MessagingInterface::Message* a_msg)
 	case SKSE::MessagingInterface::kDataLoaded:
 		if (!Data::PreloadModObjects()) {
 			REX::FAIL(
-				fmt::format("Failed to preload mod objects. Check the log (Documents/My Games/Skyrim Special Edition/{}.log for more information."sv, Plugin::NAME));
+				fmt::format("Failed to preload mod objects. Check the log (Documents/My Games/Skyrim Special Edition/SKSE/{}.log for more information."sv, Plugin::NAME));
 		}
 		SECTION_SEPARATOR;
 		if (!EffectManager::ReadConfigs()) {
 			REX::FAIL(
-				fmt::format("Failed to parse configs. Check the log (Documents/My Games/Skyrim Special Edition/{}.log for more information."sv, Plugin::NAME));
+				fmt::format("Failed to parse configs. Check the log (Documents/My Games/Skyrim Special Edition/SKSE/{}.log for more information."sv, Plugin::NAME));
 		}
 		SECTION_SEPARATOR;
 		jsonHolder->Release();
